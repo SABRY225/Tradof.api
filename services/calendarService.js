@@ -36,16 +36,12 @@ const calenderService = {
     },
     addEvent:async (req, res) => {
         const { calendarId } = req.params;
-        const { title, description, startDate, endDate, people } = req.body;
+        // const { title, description, startDate, endDate, people } = req.body;
         
         // تأكد من أن startDate و endDate هما تواريخ صحيحة
         const event = new Event({
             calendarId,
-            title,
-            description,
-            startDate: new Date(startDate), // تحويل startDate إلى Date
-            endDate: new Date(endDate),     // تحويل endDate إلى Date
-            people,
+            ...req.body
         });
         
         try {
