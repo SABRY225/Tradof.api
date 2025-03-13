@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package chat;
+
+service ChatService {
+    rpc SendMessages (MessageRequest) returns (MessageResponse); 
+    rpc GetMessages (MessagesRequest) returns (MessagesResponse); // تم تعديل النوع هنا
+}
+
+message MessageRequest {
+    string projectId = 1;        
+    string freelancerId = 2;     
+    string companyId = 3;      
+    string senderId = 4;          
+    string message = 5;    
+    string file = 6;      
+}
+
+message MessagesRequest {
+    string projectId = 1;        // ID للمشروع الذي نريد جلب الرسائل له
+}
+
+// رسالة واحدة
+message MessageResponse {
+    string projectId = 1;        // ID للمشروع
+    string freelancerId = 2;     // ID للفريلانسر
+    string companyId = 3;        // ID للشركة
+    string senderId = 4;         // ID للمرسل
+    string message = 5;          // محتوى الرسالة
+    string file = 6;
+    int64 timestamp = 7;         // تاريخ ووقت الرسالة (تخزينه كـ timestamp)
+}
+
+message SingleMessageResponse {
+    string senderId = 4;         // ID للمرسل
+    string message = 5;          // محتوى الرسالة
+    string file = 6;
+    int64 timestamp = 7;         // تاريخ ووقت الرسالة (تخزينه كـ timestamp)
+}
+// استجابة جلب الرسائل
+message MessagesResponse {
+    repeated SingleMessageResponse messages = 1;  // مصفوفة من الرسائل
+}

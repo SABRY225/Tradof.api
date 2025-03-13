@@ -1,0 +1,6 @@
+Client ID  = 908507131622-6ssqp2mevbmjl17k63u43c946rg9etil.apps.googleusercontent.com
+
+
+Client secret  =  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
+
+redirct =http://localhost:5173/redirect
