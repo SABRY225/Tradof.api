@@ -1,4 +1,5 @@
-const Calendar = require("../model/eventModel");
+const Event = require("../model/eventModel");
+const Calendar = require("../model/calenderModel");
 
 const calenderService = {
     createCalender: async (req, res) => {
