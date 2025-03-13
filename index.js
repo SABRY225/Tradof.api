@@ -16,11 +16,12 @@ app.use(cors());
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "*",
+    origin: "*", // أو ضع رابط الفرونت إند الفعلي
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
-    credentials: true
-  }
+    credentials: true,
+  },
+  transports: ["websocket", "polling"], // تأكد من دعم WebSocket
 });
 
 io.on("connection", (socket) => {
@@ -87,11 +88,9 @@ app.get("/", (req, res) => {
 app.use("/api/chat", require("./routes/chatRoute"));
 app.use("/api/feedback", require("./routes/FeedbackRoute"));
 
-// تشغيل السيرفر
 const PORT = 3005;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
 
-// تشغيل gRPC
 startGrpcServer();
