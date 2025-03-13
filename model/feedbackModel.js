@@ -1,11 +1,14 @@
 const mongoose = require('mongoose');
 
 const feedbackSchema = new mongoose.Schema({
-    userId: {type: String, required: true},
-    rate: { 
+    userId: {
+        type: String,
+        required: true
+    },
+    rate: {
         type: String,
         required: true,
-        enum: ['Very Bad', 'Bad', 'Good','Very Good','Excellent'],
+        enum: ['Very Bad', 'Bad', 'Good', 'Very Good', 'Excellent'],
     },
     reasonRate: { type: String, required: true },
     idea: { type: String, required: false },

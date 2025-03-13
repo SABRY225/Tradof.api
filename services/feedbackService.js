@@ -3,6 +3,8 @@ const Feedback = require("../model/feedbackModel");
 const feedbackService = {
     sendFeedback: async (req, res) => {
         try {
+            console.log(req.body);
+            
             const newFeedback = new Feedback(req.body);
             await newFeedback.save();
             res.status(201).json({
@@ -11,7 +13,7 @@ const feedbackService = {
             });
         } catch (error) {
             console.error("Error sending Feedback:", error);
-            res.status(500).json({ success: false, error: "Internal Server Error" });
+            res.status(500).json({ success: false, error: error });
         }
     },
     getFeedbacks: async (req, res) => {
