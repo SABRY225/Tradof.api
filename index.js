@@ -14,7 +14,7 @@ app.get('/', (req, res) => {
     res.send('Server is running');
 });
 app.use('/api/chat',require('./routes/chatRoute'));
-app.use('/api/feedback',require('./routes/feedbackRoute'));
+app.use('/api/feedback',require('./routes/FeedbackRoute'));
 // app.use('/api/ask-question/',require('./routes/chatRoute'));
 const PORT = 3005;
 app.listen(PORT, () => {
