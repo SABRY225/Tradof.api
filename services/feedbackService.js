@@ -31,7 +31,7 @@ const feedbackService = {
     deleteFeedback: async (req, res) => {
         try {
             const { feedbackId } = req.params;
-            await Feedback.findByIdAndDelete({ feedbackId })
+            await Feedback.findByIdAndDelete({ _id:feedbackId })
             res.status(200).json({
                 success: true,
                 messages: "Feedback deleted successfully"

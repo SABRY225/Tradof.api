@@ -12,7 +12,7 @@ const feedbackSchema = new mongoose.Schema({
         required: true,
         enum: ['Very Bad', 'Bad', 'Good','Very Good','Excellent'],
     },
-    reason_rate: { type: String, required: true },
+    reasonRate: { type: String, required: true },
     idea: { type: String, required: false },
     timestamp: { type: Date, default: Date.now },
 });
