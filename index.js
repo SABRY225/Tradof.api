@@ -88,6 +88,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/chat", require("./routes/chatRoute"));
 app.use("/api/feedback", require("./routes/FeedbackRoute"));
+app.use("/api/askQuestion", require("./routes/askQuestionRoute"));
 
 const PORT = 3005;
 server.listen(PORT, () => {
