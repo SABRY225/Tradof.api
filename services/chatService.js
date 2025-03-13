@@ -8,35 +8,38 @@ cloudinary.config({
     api_secret: process.env.API_SECRET,
 });
 
+
+// API endpoints (your existing endpoints)
 const chatService = {
-    sendMessages: async (req, res) => {
+    sendMessage: async (req, res) => {
         try {
             const { projectId } = req.params;
             const { freelancerId, companyId, senderId, message } = req.body;
             let fileUrl = null;
 
-            // رفع الملف إلى Cloudinary إذا كان هناك ملف مرفق
+            // Upload file to Cloudinary if there is one
             if (req.file) {
                 const uploadResponse = await cloudinary.uploader.upload(req.file.path, {
                     folder: "Chat Tradof",
-                    resource_type: "auto" // دعم جميع أنواع الملفات
+                    resource_type: "auto", // Support all file types
                 });
-                fileUrl = uploadResponse.secure_url; // حفظ رابط الملف
+                fileUrl = uploadResponse.secure_url;
             }
 
-            // إنشاء رسالة جديدة
+            // Create new message object
             const newMessage = new Chat({
                 projectId,
                 freelancerId,
                 companyId,
                 senderId,
                 message,
-                file: fileUrl
+                file: fileUrl,
             });
 
-            // حفظ الرسالة في قاعدة البيانات
+            // Save message to the database
             const savedMessage = await newMessage.save();
 
+            // Return the saved message response
             res.status(201).json({
                 success: true,
                 message: "Message sent successfully",
@@ -60,7 +63,7 @@ const chatService = {
         try {
             const { projectId } = req.params;
 
-            // جلب جميع الرسائل الخاصة بالمشروع
+            // Fetch all messages related to the project
             const messages = await Chat.find({ projectId }).sort({ timestamp: 1 });
 
             res.status(200).json({

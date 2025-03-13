@@ -7,5 +7,5 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 router.get('/:projectId', chatService.getMessages);
-router.post('/:projectId',upload.single("file"), chatService.sendMessages);
+router.post('/:projectId',upload.single("file"), chatService.sendMessage);
 module.exports = router;
