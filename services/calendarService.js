@@ -14,26 +14,30 @@ const calenderService = {
             res.status(400).json({ message: 'Error creating calendar', error });
         }
     },
-    fetchAllEventes:async (req, res) => {
-        const { date } = req.query; 
+    fetchAllEventes: async (req, res) => {
+        const { date, userId } = req.query;  
         
-        
+        if (!userId) {
+            return res.status(400).json({ message: 'User ID is required' });
+        }
+    
         const startOfDay = new Date(date);
         startOfDay.setHours(0, 0, 0, 0); 
-        
+    
         const endOfDay = new Date(date);
         endOfDay.setHours(23, 59, 59, 999); 
-        
+    
         try {
             const events = await Event.find({
-                startDate: { $gte: startOfDay, $lte: endOfDay },
+                userId: userId, // إضافة شرط userId
+                startTime: { $gte: startOfDay, $lte: endOfDay }, // فلترة حسب التاريخ
             });
             
             res.json({ events });
         } catch (error) {
             res.status(400).json({ message: 'Error fetching events', error });
         }
-    },
+    },    
     addEvent:async (req, res) => {
         const { calendarId } = req.params;
         // const { title, description, startDate, endDate, people } = req.body;
