@@ -5,6 +5,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const startGrpcServer = require("./grpcServer");
 const Chat = require("./model/chatModel");
+const { SendMailOTP } = require("./utils/mailSender");
 
 require("dotenv").config();
 
@@ -90,7 +91,7 @@ app.use("/api/chat", require("./routes/chatRoute"));
 app.use("/api/feedback", require("./routes/FeedbackRoute"));
 app.use("/api/askQuestion", require("./routes/askQuestionRoute"));
 app.use("/api/calendar", require("./routes/calendarRouter"));
-app.use("/api/technicalSupport", require("./routes/technicalSupport"));
+app.use("/api/technicalSupport", require("./routes/technicalSupportRouter"));
 
 const PORT = 3005;
 server.listen(PORT, () => {
