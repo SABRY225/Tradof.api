@@ -24,19 +24,29 @@ const technicalSupportService = {
                     resource_type: "auto", // Support all file types
                 });
                 fileUrl = uploadResponse.secure_url;
+                // Create new message object
+                const newMessage = new TechnicalSupport({
+                    adminId,
+                    userId,
+                    senderId,
+                    message,
+                    file: fileUrl,
+                });
+
+                // Save message to the database
+                await newMessage.save();
+            } else {
+                // Create new message object
+                const newMessage = new TechnicalSupport({
+                    adminId,
+                    userId,
+                    senderId,
+                    message,
+                });
+
+                // Save message to the database
+                await newMessage.save();
             }
-
-            // Create new message object
-            const newMessage = new TechnicalSupport({
-                adminId,
-                userId,
-                senderId,
-                message,
-                file: fileUrl,
-            });
-
-            // Save message to the database
-            await newMessage.save();
 
             // Return the saved message response
             res.status(201).json({
