@@ -3,13 +3,8 @@ const AskedQuestions = require("../model/askedQuestionsModel");
 const askedQuestionsService = {
     createQuestion: async (req, res) => {
         try {
-            const { fullName, email, question } = req.body;
 
-            const newQuestion = new AskedQuestions({
-                fullName,
-                email,
-                question
-            });
+            const newQuestion = new AskedQuestions(req.body);
 
             await newQuestion.save();
             res.status(201).json({ success: true, message: "Question sent successfully" });
