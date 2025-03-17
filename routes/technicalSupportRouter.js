@@ -8,6 +8,5 @@ const upload = multer({ storage: storage });
 
 router.get('/:userId', technicalSupportService.getMessages);
 router.post('/',upload.single("file"), technicalSupportService.sendMessage);
-router.post('/Send-message', technicalSupportService.SendMessageEmail);
 
 module.exports = router;

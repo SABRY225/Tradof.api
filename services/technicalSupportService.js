@@ -1,6 +1,4 @@
-const Chat = require("../model/chatModel");
 const TechnicalSupport = require("../model/technicalSupportModel");
-const { SendMail } = require("../utils/mailSender");
 const cloudinary = require("cloudinary").v2;
 
 // تهيئة Cloudinary
@@ -82,17 +80,7 @@ const technicalSupportService = {
             console.error("Error fetching messages:", error);
             res.status(500).json({ success: false, error: "Internal Server Error" });
         }
-    },
-    SendMessageEmail: async (req, res) => { 
-        try {
-            const { email,message } = req.body;
-            SendMail(email, message);
-            res.status(200).json({ success: true, message: "Message sent successfully" });
-        } catch (error) {
-            res.status(500).json({ success: false, error: "Internal Server Error" });
-        }
-    },
-    
+    },  
 };
 
 module.exports = { technicalSupportService };
