@@ -27,7 +27,7 @@ app.use("/api/askQuestion", askQuestionRoutes);
 app.use("/api/calendar", calendarRoutes);
 app.use("/api/technicalSupport", technicalSupportRoutes);
 app.use("/api/notification", notificationRoutes);
-app.use("/api/token", tokenRoutes); 
+app.use("/api/token", tokenRoutes);  
 
 app.get("/", (req, res) => {
   res.send("Server is running");
