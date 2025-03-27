@@ -20,12 +20,14 @@ const askQuestionRoutes = require("./routes/askQuestionRoute");
 const calendarRoutes = require("./routes/calendarRouter");
 const technicalSupportRoutes = require("./routes/technicalSupportRouter");
 const notificationRoutes = require("./routes/notificationRoutes");
+const tokenRoutes = require("./routes/tokenRoutes");
 
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/askQuestion", askQuestionRoutes);
 app.use("/api/calendar", calendarRoutes);
 app.use("/api/technicalSupport", technicalSupportRoutes);
 app.use("/api/notification", notificationRoutes);
+app.use("/api/token", tokenRoutes);  
 
 app.get("/", (req, res) => {
   res.send("Server is running");
