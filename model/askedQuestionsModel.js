@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const askedQuestionsSchema = new mongoose.Schema({
-    userId: { type: String, required: true },
+    user: { type: Object, required: true },
     question: { type: String, required: true },
     answer: { type: String, required: false }
 });

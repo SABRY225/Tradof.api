@@ -13,19 +13,14 @@ const eventSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    startTime: {
+    startDate: {
         type: Date,
         required: true
     },
-    endTime: {
+    endDate: {
         type: Date,
         required: true
     },
-    people: [{
-        fullName: { type: String, required: true },
-        image: { type: String, required: true },
-        email: { type: String, required: true }
-    }],
     timestamp: {
         type: Date,
         default: Date.now

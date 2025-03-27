@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "undefined/subscriptions/c1294a93-5b2f-4766-a173-b485e54a9313/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/tradofserver",
+    "appService.deploySubpath": "."
+}

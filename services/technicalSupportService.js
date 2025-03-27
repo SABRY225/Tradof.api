@@ -1,86 +1,82 @@
+const { imageUploadUtil } = require("../helpers/cloudinary");
+const { getTokenFromDotNet } = require("../helpers/getToken");
 const TechnicalSupport = require("../model/technicalSupportModel");
-const cloudinary = require("cloudinary").v2;
+const sharp = require("sharp");
 
-// تهيئة Cloudinary
-cloudinary.config({
-    cloud_name: process.env.CLOUD_NAME,
-    api_key: process.env.API_KRY_CLOUDINARY,
-    api_secret: process.env.API_SECRET,
-});
-
-
-// API endpoints (your existing endpoints)
 const technicalSupportService = {
     sendMessage: async (req, res) => {
         try {
+            const token = req.headers['authorization'];
+            if (!token) return res.status(400).json({ success: false, message: 'Token is missing!' });
+    
+            const user = await getTokenFromDotNet(token);
+            if (!user) return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+    
             const { userId, adminId, senderId, message } = req.body;
-            let fileUrl = null;
-
-            // Upload file to Cloudinary if there is one
-            if (req.file) {
-                const uploadResponse = await cloudinary.uploader.upload(req.file.path, {
-                    folder: "Chat Tradof",
-                    resource_type: "auto", // Support all file types
-                });
-                fileUrl = uploadResponse.secure_url;
-                // Create new message object
-                const newMessage = new TechnicalSupport({
-                    adminId,
-                    userId,
-                    senderId,
-                    message,
-                    file: fileUrl,
-                });
-
-                // Save message to the database
-                await newMessage.save();
-            } else {
-                // Create new message object
-                const newMessage = new TechnicalSupport({
-                    adminId,
-                    userId,
-                    senderId,
-                    message,
-                });
-
-                // Save message to the database
-                await newMessage.save();
+            if (![adminId, userId].includes(senderId)) {
+                return res.status(403).json({ success: false, message: 'The sender must be the admin or the user' });
             }
-
-            // Return the saved message response
-            res.status(201).json({
-                success: true,
-                message: "Message sent successfully",
-            });
-
+    
+            let chat = await TechnicalSupport.findOneAndUpdate(
+                { userId, adminId },
+                { $setOnInsert: { userId, adminId, messages: [] } },
+                { new: true, upsert: true }
+            );
+    
+            let fileUrl = null;
+            if (req.file) {
+                try {
+                    const optimizedImage = await sharp(req.file.buffer)
+                        .resize(800)
+                        .jpeg({ quality: 80 })
+                        .toBuffer();
+    
+                    const base64Image = `data:${req.file.mimetype};base64,${optimizedImage.toString("base64")}`;
+                    const uploadResponse = await imageUploadUtil(base64Image);
+                    fileUrl = uploadResponse.secure_url;
+                } catch (uploadError) {
+                    return res.status(500).json({ success: false, message: "File upload failed", error: uploadError.message });
+                }
+            }
+    
+            chat.messages.push({ senderId, message, file: fileUrl });
+            await chat.save();
+    
+            res.status(201).json({ success: true, message: "Message sent successfully" });
+    
         } catch (error) {
-            console.error("Error sending message:", error);
-            res.status(500).json({ success: false, error: "Internal Server Error" });
+            res.status(500).json({ success: false, message: error.message });
         }
-    },
-
+    },    
     getMessages: async (req, res) => {
         try {
+            const token = req.headers['authorization'];
+
+            if (!token) {
+                return res.status(400).json({ success: false, message: 'Token is missing!' });
+            }
+
+            const user = await getTokenFromDotNet(token);
+            if (!user) {
+                return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+            }
+
             const { userId } = req.params;
 
-            // Fetch all messages related to the project
-            const messages = await TechnicalSupport.find({ userId }).sort({ timestamp: 1 });
+            const chat = await TechnicalSupport.findOne({ userId }).sort({ timestamp: 1 });;
 
+            if (!chat) {
+                return res.status(404).json({ success: false, message: "No messages found" });
+            }
             res.status(200).json({
                 success: true,
-                messages: messages.map((msg) => ({
-                    message: msg.message,
-                    senderId: msg.senderId,
-                    file: msg.file,
-                    timestamp: msg.timestamp.getTime(),
-                }))
+                messages: chat.messages
             });
 
         } catch (error) {
-            console.error("Error fetching messages:", error);
-            res.status(500).json({ success: false, error: "Internal Server Error" });
+            res.status(500).json({ success: false, message:error.message });
         }
-    },  
+    },
 };
 
 module.exports = { technicalSupportService };

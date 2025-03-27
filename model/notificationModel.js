@@ -4,9 +4,9 @@ const notificationSchema = new mongoose.Schema({
     type: {
         type: String,
         required: true,
-        enum: ["Technical Support", "Offer", "Message", "Calendar", "Report"],
+        enum: ["Technical Support", "Offer","Payment", "Message", "Calendar", "Report"],
     },
-    userId: {
+    senderId: {
         type: String,
         required: true
     },
@@ -16,7 +16,7 @@ const notificationSchema = new mongoose.Schema({
     },
     description: {
         type: String,
-        required: true
+        required: false
     },
     seen: {
         type: Boolean,

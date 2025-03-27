@@ -3,9 +3,9 @@ const { calenderService } = require("../services/calendarService");
 const router = express.Router();
 
 router.post('/', calenderService.createCalender);
-router.get("/events/:calendarId",calenderService.fetchAllEventes );
-router.post('/:calendarId/event',calenderService.addEvent );
-router.delete('/event/:eventId', calenderService.deleteEvent);
-router.put('/event/:eventId', calenderService.editEvent);
+router.get("/events",calenderService.fetchAllEvents);
+router.post('/event',calenderService.addEvent );
+router.delete('/:eventId', calenderService.deleteEvent);
+router.patch('/:eventId', calenderService.editEvent);
 
 module.exports = router;

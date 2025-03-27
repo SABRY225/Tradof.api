@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const calendarSchema = new mongoose.Schema({
-    userId: { type: String, required: true },
+    user: { type: Object, required: true },
     timestamp: { type: Date, default: Date.now },
 });
 

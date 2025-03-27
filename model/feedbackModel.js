@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const feedbackSchema = new mongoose.Schema({
-    userId: {
-        type: String,
+    user: {
+        type: Object,
         required: true
     },
     rate: {

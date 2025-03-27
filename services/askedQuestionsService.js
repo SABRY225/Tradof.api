@@ -1,77 +1,204 @@
+const { default: mongoose } = require("mongoose");
+const { getTokenFromDotNet } = require("../helpers/getToken");
 const AskedQuestions = require("../model/askedQuestionsModel");
 
 const askedQuestionsService = {
     createQuestion: async (req, res) => {
         try {
+            const token = req.headers['authorization']; 
+            
+            if (!token) {
+                return res.status(400).json({success: false, message: 'token is missing!' });
+            }
+            const user = await getTokenFromDotNet(token); 
+            if (!user) {
+                return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+            }
+            const {question} = req.body;
+            if (!question) {
+                return res.status(400).json({ success: false,message: "Question are required" });
+            }
+            const existingQuestion = await AskedQuestions.findOne({ question });
 
-            const newQuestion = new AskedQuestions(req.body);
-
+            if (existingQuestion) {
+                return res.status(400).json({ success: false, message: "This question has already been asked!" });
+            }
+            const newQuestion = new AskedQuestions({user,question});
             await newQuestion.save();
             res.status(201).json({ success: true, message: "Question sent successfully" });
         } catch (error) {
-            res.status(500).json({ success: false, error: "An error occurred while sending the question" });
+            res.status(500).json({ success: false, message:error.message });
         }
     },
     deleteQuestion: async (req, res) => {
         try {
-            const { questionId } = req.params;
+            const token = req.headers['authorization']; 
+            
+            if (!token) {
+                return res.status(400).json({success: false, message: 'token is missing!' });
+            }
+            const user = await getTokenFromDotNet(token); 
+            if (!user) {
+                return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+            }
 
+            const { questionId } = req.params;
+    
+            if (!mongoose.Types.ObjectId.isValid(questionId)) {
+                return res.status(400).json({ success: false, message: "Invalid Question ID" });
+            }
+    
             const deletedQuestion = await AskedQuestions.findByIdAndDelete(questionId);
+    
             if (!deletedQuestion) {
                 return res.status(404).json({ success: false, message: "Question not found" });
             }
-
+    
             res.status(200).json({ success: true, message: "Question deleted successfully" });
+    
         } catch (error) {
-            console.error("Error deleting question:", error);
-            res.status(500).json({ success: false, error: "An error occurred while deleting the question" });
+            res.status(500).json({ success: false, message: error.message });
         }
     },
     searchQuestion: async (req, res) => {
         try {
+            const token = req.headers['authorization']; 
+            
+            if (!token) {
+                return res.status(400).json({success: false, message: 'token is missing!' });
+            }
+            const user = await getTokenFromDotNet(token); 
+            if (!user) {
+                return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+            }
+
             const { query } = req.query;
-
+    
+            if (!query || query.trim().length === 0) {
+                return res.status(400).json({ success: false, message: "Search query is required" });
+            }
+    
             const questions = await AskedQuestions.find({
-                question: { $regex: query, $options: "i" } // Case-insensitive search
+                question: { $regex: new RegExp(query, "i") } 
             });
-
-            res.status(200).json({ success: true, questions });
+    
+            if (questions.length === 0) {
+                return res.status(404).json({ success: false, message: "No matching questions found" });
+            }
+    
+            res.status(200).json({ success: true, data:questions });
+    
         } catch (error) {
-            console.error("Error searching question:", error);
-            res.status(500).json({ success: false, error: "An error occurred while searching for the question" });
+            res.status(500).json({ success: false, message: error.message });
         }
     },
     answerQuestion: async (req, res) => {
         try {
-            const { id } = req.params;
-            const { answer } = req.body;
-
-            const updatedQuestion = await AskedQuestions.findByIdAndUpdate(
-                id,
-                { answer },
-                { new: true }
-            );
-
-            if (!updatedQuestion) {
-                return res.status(404).json({ success: false, message: "Question not found" });
+            const token = req.headers['authorization']; 
+            
+            if (!token) {
+                return res.status(400).json({success: false, message: 'token is missing!' });
+            }
+            const user = await getTokenFromDotNet(token); 
+            if (!user) {
+                return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
             }
 
-            res.status(200).json({ success: true, message: "Question answered successfully", question: updatedQuestion });
+            const { id } = req.params;
+            const { answer } = req.body;
+    
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                return res.status(400).json({ success: false, message: "Invalid Question ID" });
+            }
+    
+            if (!answer || answer.trim().length === 0) {
+                return res.status(400).json({ success: false, message: "Answer is required" });
+            }
+    
+            const question = await AskedQuestions.findById(id);
+    
+            if (!question) {
+                return res.status(404).json({ success: false, message: "Question not found" });
+            }
+    
+            if (question.answer) {
+                return res.status(400).json({ success: false, message: "Question already answered" });
+            }
+    
+            question.answer = answer;
+            await question.save();
+    
+            res.status(200).json({ success: true, message: "Question answered successfully", question });
+    
         } catch (error) {
-            console.error("Error answering question:", error);
-            res.status(500).json({ success: false, error: "An error occurred while answering the question" });
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },    
+    getUnansweredQuestions: async (req, res) => {
+        try {
+            const token = req.headers['authorization']; 
+            
+            if (!token) {
+                return res.status(400).json({success: false, message: 'token is missing!' });
+            }
+            const user = await getTokenFromDotNet(token); 
+            if (!user) {
+                return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+            }
+
+            const unansweredQuestions = await AskedQuestions.find({
+                answer: { $in: [null, ""] } 
+            });
+    
+            if (unansweredQuestions.length === 0) {
+                return res.status(404).json({ success: false, message: "No unanswered questions found" });
+            }
+    
+            res.status(200).json({ success: true, data: unansweredQuestions });
+    
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
         }
     },
-    getUnansweredQuestions : async (req, res) => {
-        try {
-            const unansweredQuestions = await AskedQuestions.find({ answer: { $exists: false } });
-    
-            res.status(200).json({ success: true, questions: unansweredQuestions });
-        } catch (error) {
-            console.error("Error fetching unanswered questions:", error);
-            res.status(500).json({ success: false, error: "An error occurred while fetching unanswered questions" });
+    updateAnswer: async (req, res) => {
+    try {
+        const token = req.headers['authorization']; 
+            
+        if (!token) {
+            return res.status(400).json({success: false, message: 'token is missing!' });
         }
+        const user = await getTokenFromDotNet(token); 
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+        }
+        
+        const { id } = req.params;
+        const { answer } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ success: false, message: "Invalid Question ID" });
+        }
+
+        if (!answer || answer.trim().length === 0) {
+            return res.status(400).json({ success: false, message: "Answer is required" });
+        }
+
+        const updatedQuestion = await AskedQuestions.findByIdAndUpdate(
+            id,
+            { answer },
+            { new: true }
+        );
+
+        if (!updatedQuestion) {
+            return res.status(404).json({ success: false, message: "Question not found" });
+        }
+
+        res.status(200).json({ success: true, message: "Answer updated successfully", question: updatedQuestion });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
+   }
 };
 
 module.exports = { askedQuestionsService };

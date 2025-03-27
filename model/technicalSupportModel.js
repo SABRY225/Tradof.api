@@ -1,13 +1,17 @@
 const mongoose = require('mongoose');
 
+const messageSchema = new mongoose.Schema({
+    senderId: { type: String, required: true },
+    message: { type: String, required: true, trim: true },
+    file: { type: String, trim: false },
+    timestamp: { type: Date, default: Date.now }
+});
+
 const technicalSupportSchema = new mongoose.Schema({
     userId: { type: String, required: true },
     adminId:{ type: String, required: true },
-    senderId: { type: String, required: true },
-    message: { type: String, required: true },
-    file: { type: String, required: false },
-    timestamp: { type: Date, default: Date.now },
-});
+    messages: [messageSchema]
+},{ timestamps: true });
 
 const TechnicalSupport = mongoose.model('TechnicalSupport', technicalSupportSchema);
 
