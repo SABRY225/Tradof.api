@@ -30,7 +30,6 @@ app.use("/api/notification", notificationRoutes);
 app.get("/", (req, res) => {
   res.send("Server is running");
 });
-
 const PORT = 3005;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
