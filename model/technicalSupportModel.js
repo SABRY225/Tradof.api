@@ -8,8 +8,8 @@ const messageSchema = new mongoose.Schema({
 });
 
 const technicalSupportSchema = new mongoose.Schema({
-    userId: { type: String, required: true },
-    adminId:{ type: String, required: true },
+    user: { type: Object, required: true },
+    admin:{ type: String, required: true },
     messages: [messageSchema]
 },{ timestamps: true });
 

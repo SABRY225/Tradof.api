@@ -15,12 +15,16 @@ app.use(express.json());
 const server = http.createServer(app);
 initializeSocket(server); //  WebSocket
 
-const feedbackRoutes = require("./routes/FeedbackRoute");
-const askQuestionRoutes = require("./routes/askQuestionRoute");
-const calendarRoutes = require("./routes/calendarRouter");
-const technicalSupportRoutes = require("./routes/technicalSupportRouter");
+const feedbackRoutes = require("./routes/FeedbackRoutes");
+const askQuestionRoutes = require("./routes/askQuestionRoutes");
+const calendarRoutes = require("./routes/calendarRoutes");
+const technicalSupportRoutes = require("./routes/technicalSupportRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const tokenRoutes = require("./routes/tokenRoutes");
+const packageRoutes = require("./routes/packageRoutes");
+const subscriptionRoutes = require("./routes/subscriptionRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const financialRoutes = require("./routes/financialRoutes");
 
 
 app.use("/api/feedback", feedbackRoutes);
@@ -29,6 +33,10 @@ app.use("/api/calendar", calendarRoutes);
 app.use("/api/technicalSupport", technicalSupportRoutes);
 app.use("/api/notification", notificationRoutes);
 app.use("/api/token", tokenRoutes);  
+app.use("/api/package", packageRoutes);  
+app.use("/api/subscription", subscriptionRoutes);  
+app.use("/api/payment",paymentRoutes);  
+app.use("/api/financial",financialRoutes);  
 
 
 app.use((req, res, next) => {
