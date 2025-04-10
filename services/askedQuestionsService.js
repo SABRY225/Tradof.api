@@ -25,7 +25,7 @@ const askedQuestionsService = {
             }
             const newQuestion = new AskedQuestions({user,question});
             await newQuestion.save();
-            res.status(201).json({ success: true, message: "Question sent successfully" });
+            res.status(201).json({ success: true, message: "The question was sent to the officials" });
         } catch (error) {
             res.status(500).json({ success: false, message:error.message });
         }
@@ -79,11 +79,12 @@ const askedQuestionsService = {
             }
     
             const questions = await AskedQuestions.find({
-                question: { $regex: new RegExp(query, "i") } 
-            });
+                question: { $regex: new RegExp(query, "i") },
+                answer: { $exists: true, $ne: "" } // فقط الأسئلة التي لديها إجابة
+              });
     
             if (questions.length === 0) {
-                return res.status(404).json({ success: false, message: "No matching questions found" });
+                return res.status(200).json({ success: true,data:[], message: "No matching questions found" });
             }
     
             res.status(200).json({ success: true, data:questions });

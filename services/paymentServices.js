@@ -9,6 +9,8 @@ const paymentService ={
     joinSubscription: async (req, res) => {
         try {
             const token = req.headers['authorization'];
+            console.log(req);
+            
             if (!token) {
                 return res.status(400).json({ success: false, message: 'Token is missing!' });
             }
@@ -110,7 +112,7 @@ const paymentService ={
                 paymentStatus: "pending"
             });
     
-            const newSession = await Session.create({
+            const newSession = Session.create({
                 type: "PFinancial",
                 typeId: newPFinancial._id,
                 orderId: data.orderId,
@@ -129,7 +131,45 @@ const paymentService ={
         } catch (err) {
             res.status(500).json({ success: false, message: err.message });
         }
-    }
+    },
+    callBack: async (req, res) => {
+        try {
+          const {success, orderId, message } = req.body;
+      
+          if (success) {
+            const session = await Session.findOne({ orderId });
+      
+            if (!session) {
+              return res.status(404).json({ message: "Session not found" });
+            }
+      
+            if (session.type === "SubPackage") {
+              const subPackage = await SubPackage.findOne({ _id: session.typeId });
+      
+              if (!subPackage) {
+                return res.status(404).json({ message: "SubPackage not found" });
+              }
+      
+              subPackage.status = "accepted";
+              await subPackage.save();
+      
+              session.status = "paid";
+              await session.save();
+            }
+      
+            // ممكن تضيف أنواع تانية هنا حسب نوع الجلسة
+            // else if (session.type === "Plan") { ... }
+      
+            return res.status(200).json({success: true,  message: "Payment confirmed and data updated." });
+          } else {
+            return res.status(400).json({success: false,  message: "Payment was not successful", details: message });
+          }
+      
+        } catch (error) {
+          res.status(500).json({success: false, message:error.message});
+        }
+      }
+      
 }
 
 module.exports = { paymentService };

@@ -1,14 +1,16 @@
 const mongoose = require('mongoose');
 
 const withdrawProfitSchema = new mongoose.Schema({
-    freelancerId: {
-        type: String,
+    freelancer: {
+        type: Object,
         required: true
     },
     amount: { type: Number, required: true },
     paymentStatus: { type: String, required: true, enum: ['pending', 'paid', 'rejected'],default: 'pending'},
-    paymentDate: { type: Date, required: false },
-    orderStuty: { type: String,required: true,enum: ['pending', 'accepted'],default: 'pending'},
+    paymentDetails:{
+        type: Object,
+        required: true
+    }
 },{ timestamps: true });
 
 const WithdrawProfit = mongoose.model('WithdrawProfit', withdrawProfitSchema);

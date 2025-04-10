@@ -48,9 +48,9 @@ async function handleSendMessage(io, data) {
         }
 
         // ✅ التحقق من أن `projectId`, `freelancerId`, `companyId`, و `senderId` معرفات MongoDB صحيحة
-        if (![projectId, freelancerId, companyId, senderId].every(mongoose.Types.ObjectId.isValid)) {
-            return console.error("Validation Error: Invalid ObjectId format");
-        }
+        // if (![projectId, freelancerId, companyId, senderId].every(mongoose.Types.ObjectId.isValid)) {
+        //     return console.error("Validation Error: Invalid ObjectId format");
+        // }
 
         // ✅ رفض الرسائل الفارغة أو التي تحتوي فقط على مسافات
         if (typeof message !== "string" || message.trim().length === 0) {

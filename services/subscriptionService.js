@@ -5,64 +5,6 @@ const Session = require("../model/sessionModel");
 const SubPackage = require('../model/subPackageModel');
 
 const subscriptionService = {
-    joinSubscription: async (req, res) => {
-        try {
-            const token = req.headers['authorization'];
-            if (!token) {
-                return res.status(400).json({ success: false, message: 'Token is missing!' });
-            }
-            const user = await getTokenFromDotNet(token);
-            if (user.role !== "CompanyAdmin") {
-                return res.status(401).json({ success: false, message: 'The company admin must renew the package.' });
-            }
-            const { packageId } = req.body;
-            const pkg = await Package.findById(packageId);
-            if (!pkg) return res.status(404).json({ success: false, message: 'Package not found' });
-
-            if (pkg.price === 0) {
-                const alreadySubscribed = await SubPackage.findOne({
-                    "company.id": user.id,
-                    packageId
-                });
-
-                if (alreadySubscribed) {
-                    return res.status(400).json({ success: false, message: "You cannot subscribe to the free package more than once." });
-                } else {
-                    const newSub = await SubPackage.create({
-                        packageId,
-                        company: user,
-                        startSub: new Date(),
-                        status: "accepted"
-                    });
-                    await newSub.save();
-                    res.status(201).json({ success: true, message: "The package was successfully subscribed.", type: "Free", data: newSub });
-                }
-            }
-            console.log(user);
-
-            if (pkg.price > 0) {
-                const data = await PaymentProcess({
-                    price: pkg.price,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    email: user.email
-                })
-                const newSub = await SubPackage.create({
-                    packageId,
-                    company: user,
-                    startSub: new Date(),
-                    status: "pending"
-                });
-                const newSession = await Session.create({ type: "SubPackage", typeId: newSub._id, orderId: data.orderId, status: "pending" })
-                await newSub.save();
-                await newSession.save();
-                res.status(201).json({ success: true, message: "Please pay for the package.", type: "paid", iframURL: data.iframURL });
-            }
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ success: false, message: error.message });
-        }
-    },
     getSubscription: async (req, res) => {
         try {
             const token = req.headers['authorization'];
@@ -79,7 +21,7 @@ const subscriptionService = {
                 .sort({ startSub: -1 })
                 .populate('packageId');
 
-            if (!sub) return res.status(404).json({ success: false, message: 'No subscription found' });
+            if (!sub) return res.status(200).json({ success: false, message: 'No subscription found' });
 
             res.status(200).json({ success: true, data: sub });
         } catch (err) {
