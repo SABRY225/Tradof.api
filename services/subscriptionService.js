@@ -1,8 +1,8 @@
 const { getTokenFromDotNet } = require("../helpers/getToken");
 const { PaymentProcess } = require("../helpers/payment");
-const Package = require("../model/packageModel");
-const Session = require("../model/sessionModel");
-const SubPackage = require('../model/subPackageModel');
+const Package = require("../models/packageModel");
+const Session = require("../models/sessionModel");
+const SubPackage = require('../models/subPackageModel');
 
 const subscriptionService = {
     getSubscription: async (req, res) => {

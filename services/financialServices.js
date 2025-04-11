@@ -1,15 +1,15 @@
 const { getTokenFromDotNet } = require("../helpers/getToken");
-const Package = require("../model/packageModel");
-const SubPackage = require("../model/subPackageModel");
+const Package = require("../models/packageModel");
+const SubPackage = require("../models/subPackageModel");
 const { PaymentProcess } = require("../helpers/payment");
-const Session = require("../model/sessionModel");
-const PFinancial = require("../model/PFinancialModel");
+const Session = require("../models/sessionModel");
+const PFinancial = require("../models/PFinancialModel");
 const axios = require("axios");
 const https = require("https");
-const CompanyWallet = require("../model/compamyWalletModel");
-const FreelancerWallet = require("../model/freelancerWalletModel");
-const AdminWallet = require("../model/AdminWalletModel");
-const WithdrawProfit = require("../model/withdrawProfitModel");
+const CompanyWallet = require("../models/compamyWalletModel");
+const FreelancerWallet = require("../models/freelancerWalletModel");
+const AdminWallet = require("../models/AdminWalletModel");
+const WithdrawProfit = require("../models/withdrawProfitModel");
 
 const paymentService = {
     getStatusProject: async (req, res) => {
@@ -259,35 +259,25 @@ const paymentService = {
             }
     
             const user = await getTokenFromDotNet(token);
+            
             if (!user) {
                 return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
             }
 
-            if (user.role!=="admin") {
+            if (user.role!=="Admin") {
                 return res.status(401).json({ success: false, message: 'You are not an admin' });
             }
 
-            const adminFinancial = await AdminWallet.find({});
-    
-            // Validate if financial data exists
-            if (!adminFinancial) {
-                res.status(200).json({
-                    success: true,
-                    data: {
-                        totalSubscription: 0,
-                        totalPendingMoney: 0,
-                        totalMoneyByFreelancers: 0
-                    }
-                });
-            }
-    
+            const adminFinancial = await AdminWallet.findOne({_id:"67f7bda255cec58cb4c3fd6b"});
+           
             // Response
             res.status(200).json({
                 success: true,
                 data: {
-                    totalSubscription: freelancerFinancial.totalSubscription,
-                    totalPendingMoney: freelancerFinancial.totalPendingMoney,
-                    totalMoneyByFreelancers: freelancerFinancial.totalMoneyByFreelancers
+                    totalSubscription: adminFinancial.totalSubscription,
+                    totalPendingMoney: adminFinancial.totalPendingMoney,
+                    totalMoneyByFreelancers: adminFinancial.totalMoneyByFreelancers,
+                    totalMoneyByFreelancersReceive: adminFinancial.totalMoneyByFreelancersReceive
                 }
             });
     
@@ -335,6 +325,7 @@ const paymentService = {
             res.status(500).json({ success: false, message: error.message });
         }
     },
+    // محتاجه تعديل يسطا
     editStatusRequest:async(req,res)=>{
         try {
             const token = req.headers['authorization'];
@@ -402,10 +393,7 @@ const paymentService = {
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
-    },
-    // finshProject:async(req,res)=>{
-
-    // },
+    }
 }
 
 module.exports = { paymentService };

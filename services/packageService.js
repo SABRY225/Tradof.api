@@ -1,4 +1,4 @@
-const Package = require("../model/packageModel");
+const Package = require("../models/packageModel");
 const { getTokenFromDotNet } = require("../helpers/getToken");
 const { default: mongoose } = require("mongoose");
 

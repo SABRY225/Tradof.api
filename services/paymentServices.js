@@ -1,9 +1,12 @@
 const { getTokenFromDotNet } = require("../helpers/getToken");
-const Package = require("../model/packageModel");
-const SubPackage = require("../model/subPackageModel");
+const Package = require("../models/packageModel");
+const SubPackage = require("../models/subPackageModel");
 const { PaymentProcess } = require("../helpers/payment");
-const Session = require("../model/sessionModel");
-const PFinancial = require("../model/PFinancialModel");
+const Session = require("../models/sessionModel");
+const PFinancial = require("../models/PFinancialModel");
+const AdminWallet = require("../models/AdminWalletModel");
+const FreelancerWallet = require("../models/freelancerWalletModel");
+const CompanyWallet = require("../models/compamyWalletModel");
 
 const paymentService ={
     joinSubscription: async (req, res) => {
@@ -66,110 +69,203 @@ const paymentService ={
     },
     payProject: async (req, res) => {
         try {
-            const token = req.headers['authorization'];
-    
-            if (!token) {
-                return res.status(400).json({ success: false, message: 'Token is missing!' });
-            }
-    
-            const user = await getTokenFromDotNet(token);
-            if (!user) {
-                return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
-            }
-    
-            const { projectId, freelancerId, budget, deliveryTime } = req.body;
-    
-            // ✅ التحقق من البيانات المطلوبة
-            if (!projectId || !freelancerId || !budget || !deliveryTime) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'All fields (projectId, freelancerId, budgut, deliveryTime) are required.'
-                });
-            }
-    
-            if (typeof budget !== 'number' || budget <= 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'budgut must be a positive number.'
-                });
-            }
-    
-            // ✅ هنا يبدأ الدفع
-            const data = await PaymentProcess({
-                price: budget,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email
-            });
-    
-            const newPFinancial = await PFinancial.create({
-                company: user,
-                projectId,
-                freelancerId,
-                budget,
-                deliveryTime,
-                paymentDate: new Date(),
-                paymentStatus: "pending"
-            });
-    
-            const newSession = Session.create({
-                type: "PFinancial",
-                typeId: newPFinancial._id,
-                orderId: data.orderId,
-                status: "pending"
-            });
-    
-            await newPFinancial.save();
-            await newSession.save();
-    
-            res.status(201).json({
-                success: true,
-                message: "Please pay for the package.",
-                type: "paid",
-                iframURL: data.iframURL
-            });
-        } catch (err) {
-            res.status(500).json({ success: false, message: err.message });
-        }
-    },
-    callBack: async (req, res) => {
-        try {
-          const {success, orderId, message } = req.body;
+          const token = req.headers['authorization'];
       
-          if (success) {
-            const session = await Session.findOne({ orderId });
-      
-            if (!session) {
-              return res.status(404).json({ message: "Session not found" });
-            }
-      
-            if (session.type === "SubPackage") {
-              const subPackage = await SubPackage.findOne({ _id: session.typeId });
-      
-              if (!subPackage) {
-                return res.status(404).json({ message: "SubPackage not found" });
-              }
-      
-              subPackage.status = "accepted";
-              await subPackage.save();
-      
-              session.status = "paid";
-              await session.save();
-            }
-      
-            // ممكن تضيف أنواع تانية هنا حسب نوع الجلسة
-            // else if (session.type === "Plan") { ... }
-      
-            return res.status(200).json({success: true,  message: "Payment confirmed and data updated." });
-          } else {
-            return res.status(400).json({success: false,  message: "Payment was not successful", details: message });
+          if (!token) {
+            return res.status(400).json({ success: false, message: 'Token is missing!' });
           }
       
-        } catch (error) {
-          res.status(500).json({success: false, message:error.message});
-        }
-      }
+          const user = await getTokenFromDotNet(token);
+          if (!user) {
+            return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+          }
       
+          const { projectId, freelancerId, budget, deliveryTime } = req.body;
+      
+          if (!projectId || !freelancerId || !budget || !deliveryTime) {
+            return res.status(400).json({
+              success: false,
+              message: 'All fields (projectId, freelancerId, budget, deliveryTime) are required.'
+            });
+          }
+      
+          if (typeof budget !== 'number' || budget <= 0) {
+            return res.status(400).json({
+              success: false,
+              message: 'Budget must be a positive number.'
+            });
+          }
+      
+          // ✅ تنفيذ الدفع
+          const data = await PaymentProcess({
+            price: budget,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email
+          });
+      
+          // ✅ إنشاء المستندات بالتوازي
+          const [newPFinancial, newSession] = await Promise.all([
+            PFinancial.create({
+              company: user,
+              projectId,
+              freelancerId,
+              budget,
+              deliveryTime,
+              paymentDate: new Date(),
+              paymentStatus: "pending"
+            }),
+            Session.create({
+              type: "PFinancial",
+              orderId: data.orderId,
+              status: "pending"
+            })
+          ]);
+      
+          newSession.typeId = newPFinancial._id;
+      
+          // ✅ إنشاء المحافظ فقط عند الحاجة
+          const walletPromises = [];
+      
+          const existingFreelancerWallet = await FreelancerWallet.findOne({ freelancerId });
+          if (!existingFreelancerWallet) {
+            walletPromises.push(FreelancerWallet.create({ freelancerId }));
+          }
+      
+          const existingCompanyWallet = await CompanyWallet.findOne({ companyId: user.id });
+          if (!existingCompanyWallet) {
+            walletPromises.push(CompanyWallet.create({ companyId: user.id }));
+          }
+      
+          walletPromises.push(newSession.save());
+      
+          await Promise.all(walletPromises);
+      
+          return res.status(201).json({
+            success: true,
+            message: "Please pay for the package.",
+            type: "paid",
+            iframURL: data.iframURL
+          });
+      
+        } catch (err) {
+          return res.status(500).json({ success: false, message: err.message });
+        }
+    },    
+    callBack: async (req, res) => {
+        try {
+          const { success, orderId, message } = req.body;
+      
+          if (!success) {
+            return res.status(400).json({ success: false, message: "Payment was not successful", details: message });
+          }
+      
+          const session = await Session.findOne({ orderId });
+          if (!session) return res.status(404).json({ message: "Session not found" });
+      
+          const adminWalletPromise = AdminWallet.findOne({ _id: "67f7bda255cec58cb4c3fd6b" });
+      
+          if (session.type === "SubPackage") {
+            const subPackage = await SubPackage.findOne({ _id: session.typeId }).populate("packageId");
+            if (!subPackage) return res.status(404).json({ message: "SubPackage not found" });
+      
+            const adminWallet = await adminWalletPromise;
+      
+            subPackage.status = "accepted";
+            adminWallet.totalSubscription += subPackage.packageId.price;
+            session.status = "paid";
+      
+            await Promise.all([
+              subPackage.save(),
+              adminWallet.save(),
+              session.save()
+            ]);
+      
+          } else if (session.type === "PFinancial") {
+            const pFinancial = await PFinancial.findOne({ _id: session.typeId });
+            if (!pFinancial) return res.status(404).json({ message: "Project Finances not found" });
+      
+            const [adminWallet, freelancerWallet, companyWallet] = await Promise.all([
+              adminWalletPromise,
+              FreelancerWallet.findOne({ _id: pFinancial.freelancerId }),
+              CompanyWallet.findOne({ _id: pFinancial.company.id })
+            ]);
+      
+            if (!freelancerWallet || !companyWallet) {
+              return res.status(404).json({ message: "Freelancer or Company Wallet not found" });
+            }
+      
+            pFinancial.status = "accepted";
+      
+            adminWallet.totalPendingMoney += pFinancial.budget;
+      
+            companyWallet.pendingBalance += pFinancial.budget;
+            companyWallet.totalBalance = companyWallet.pendingBalance + companyWallet.previousBalance;
+      
+            freelancerWallet.pendingBalance += pFinancial.budget;
+      
+            session.status = "paid";
+      
+            await Promise.all([
+              pFinancial.save(),
+              companyWallet.save(),
+              freelancerWallet.save(),
+              adminWallet.save(),
+              session.save()
+            ]);
+          }
+      
+          return res.status(200).json({ success: true, message: "Payment confirmed and data updated." });
+      
+        } catch (error) {
+          res.status(500).json({ success: false, message: error.message });
+        }
+    },
+    finishProject: async (req, res) => {
+        try {
+          const { projectId } = req.params;
+      
+          const pFinancial = await PFinancial.findById(projectId);
+          if (!pFinancial) {
+            return res.status(404).json({ success: false, message: 'Project Financial not found!' });
+          }
+      
+          const [adminWallet, freelancerWallet, companyWallet] = await Promise.all([
+            AdminWallet.findOne({ _id: "67f7bda255cec58cb4c3fd6b" }),
+            FreelancerWallet.findOne({ _id: pFinancial.freelancerId }),
+            CompanyWallet.findOne({ _id: pFinancial.company.id })
+          ]);
+      
+          if (!adminWallet || !freelancerWallet || !companyWallet) {
+            return res.status(404).json({ success: false, message: "Wallets not found for admin, freelancer, or company." });
+          }
+      
+          const amount = pFinancial.budget;
+      
+          // ✅ تعديل أرصدة المحافظ
+          companyWallet.pendingBalance -= amount;
+          companyWallet.previousBalance += amount;
+          companyWallet.totalBalance = companyWallet.pendingBalance + companyWallet.previousBalance;
+      
+          adminWallet.totalPendingMoney -= amount;
+          adminWallet.totalMoneyByFreelancersReceive += amount;
+      
+          freelancerWallet.pendingBalance -= amount;
+          freelancerWallet.availableBalance += amount;
+          freelancerWallet.totalBalance = freelancerWallet.pendingBalance + freelancerWallet.availableBalance;
+      
+          await Promise.all([
+            companyWallet.save(),
+            freelancerWallet.save(),
+            adminWallet.save()
+          ]);
+      
+          return res.status(200).json({ success: true, message: "Project finished and balances updated." });
+      
+        } catch (error) {
+          return res.status(500).json({ success: false, message: error.message });
+        }
+    } 
 }
 
 module.exports = { paymentService };

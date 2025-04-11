@@ -1,6 +1,6 @@
 const { getTokenFromDotNet } = require("../helpers/getToken");
-const Notification = require("../model/notificationModel");
-const SettingNotification = require("../model/SettingNotificationModel");
+const Notification = require("../models/notificationModel");
+const SettingNotification = require("../models/SettingNotificationModel");
 
 const notificationService = {
     sendNotification: async (req, res) => {

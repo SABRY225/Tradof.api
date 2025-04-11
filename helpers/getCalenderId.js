@@ -1,4 +1,4 @@
-const Calendar = require("../model/calenderModel");
+const Calendar = require("../models/calenderModel");
 
 
 async function getUserCalendarId(user) {

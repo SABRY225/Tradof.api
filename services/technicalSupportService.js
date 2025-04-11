@@ -1,7 +1,7 @@
 const { imageUploadUtil } = require("../helpers/cloudinary");
 const { getTokenFromDotNet } = require("../helpers/getToken");
-const Notification = require("../model/notificationModel");
-const TechnicalSupport = require("../model/technicalSupportModel");
+const Notification = require("../models/notificationModel");
+const TechnicalSupport = require("../models/technicalSupportModel");
 const sharp = require("sharp");
 
 const technicalSupportService = {

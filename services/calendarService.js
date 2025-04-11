@@ -1,5 +1,5 @@
-const Event = require("../model/eventModel");
-const Calendar = require("../model/calenderModel");
+const Event = require("../models/eventModel");
+const Calendar = require("../models/calenderModel");
 const { default: mongoose } = require("mongoose");
 const { getTokenFromDotNet } = require("../helpers/getToken");
 const { getUserCalendarId } = require("../helpers/getCalenderId");

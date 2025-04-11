@@ -6,4 +6,5 @@ const router = express.Router();
 router.post('/callback',paymentService.callBack);
 router.post("/subscription",paymentService.joinSubscription);
 router.post("/pay-project",paymentService.payProject);
+router.post("/finish-project",paymentService.payProject);
 module.exports = router;

@@ -1,6 +1,6 @@
 const { default: mongoose } = require("mongoose");
 const { getTokenFromDotNet } = require("../helpers/getToken");
-const AskedQuestions = require("../model/askedQuestionsModel");
+const AskedQuestions = require("../models/askedQuestionsModel");
 
 const askedQuestionsService = {
     createQuestion: async (req, res) => {

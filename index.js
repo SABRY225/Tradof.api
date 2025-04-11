@@ -5,6 +5,10 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const startGrpcServer = require("./grpcServer");
 const { initializeSocket } = require("./utils/socket");
+const deleteOldPendingDocs = require('./helpers/cleaner');
+
+// Run every hour
+setInterval(deleteOldPendingDocs, 60 * 60 * 1000); // 1 hour
 
 connectDB();
 
