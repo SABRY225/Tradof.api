@@ -12,6 +12,7 @@ const feedbackSchema = new mongoose.Schema({
     },
     reasonRate: { type: String, required: true },
     idea: { type: String, required: false },
+    isAllowed: { type: Boolean, required: false,default:0 },
     timestamp: { type: Date, default: Date.now },
 });
 

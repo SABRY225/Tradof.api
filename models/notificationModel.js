@@ -6,7 +6,7 @@ const notificationSchema = new mongoose.Schema({
         required: true,
         enum: ["Technical Support", "Offer","Payment", "Message", "Calendar", "Report"],
     },
-    senderId: {
+    receiverId: {
         type: String,
         required: true
     },

@@ -1,4 +1,4 @@
-const Feedback = require("../model/feedbackModel");
+const Feedback = require("../models/feedbackModel");
 const { getTokenFromDotNet } = require("../helpers/getToken");
 const { default: mongoose } = require("mongoose");
 
