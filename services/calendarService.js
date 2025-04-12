@@ -154,8 +154,8 @@ const calenderService = {
 
       const calendarId = await getUserCalendarId(user);
 
-      const { title, description, startDate, endDate } = req.body;
-
+      const { title, description, startDate, endDate, people } = req.body;
+      // console.log(req.body);
       if (!mongoose.Types.ObjectId.isValid(calendarId)) {
         return res
           .status(400)
@@ -190,11 +190,28 @@ const calenderService = {
           message: "start date must be before end date",
         });
       }
+      // const overlappingEvent = await Event.findOne({
+      //   calendarId,
+      //   $or: [{ startDate: { $lt: end }, endDate: { $gt: start } }],
+      // });
+
       const overlappingEvent = await Event.findOne({
         calendarId,
-        $or: [{ startDate: { $lt: end }, endDate: { $gt: start } }],
+        $expr: {
+          $and: [
+            {
+              $eq: [
+                { $dayOfYear: "$startDate" },
+                { $dayOfYear: new Date(start) },
+              ],
+            },
+            { $eq: [{ $year: "$startDate" }, { $year: new Date(start) }] },
+            { $lt: ["$startDate", new Date(end)] },
+            { $gt: ["$endDate", new Date(start)] },
+          ],
+        },
       });
-
+    
       if (overlappingEvent) {
         return res.status(400).json({
           success: false,
@@ -209,6 +226,7 @@ const calenderService = {
         description,
         startDate,
         endDate,
+        participation: people,
       });
 
       await event.save();
