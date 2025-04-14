@@ -159,6 +159,8 @@ const paymentService = {
     },
     getStatisticsByCompany: async (req, res) => {
         try {
+            console.log("log");
+            
             const token = req.headers['authorization'];
     
             // Validate Token
@@ -182,11 +184,15 @@ const paymentService = {
     
             // Validate if financial data exists
             if (!companyFinancial) {
-                return res.status(404).json({ success: false, message: 'No financial data found for this company!' });
+                return res.status(200).json({ success: true, data: {
+                    totalBalance: 0,
+                    previousBalance: 0,
+                    pendingBalance: 0
+                } });
             }
     
             // Response
-            res.status(200).json({
+            return  res.status(200).json({
                 success: true,
                 data: {
                     totalBalance: companyFinancial.totalBalance,
@@ -197,7 +203,7 @@ const paymentService = {
     
         } catch (error) {
             console.error("Error in getStatisticsByCompany:", error);
-            res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+            return res.status(500).json({ success: false, message: 'Server error: ' + error.message });
         }
     },
     getStatisticsByFreelancer: async (req, res) => {
@@ -221,11 +227,11 @@ const paymentService = {
                 return res.status(400).json({ success: false, message: 'freelancerId is required!' });
             }
 
-            const freelancerFinancial = await FreelancerWallet.findOne({ companyId });
+            const freelancerFinancial = await FreelancerWallet.findOne({ freelancerId });
     
             // Validate if financial data exists
             if (!freelancerFinancial) {
-                res.status(200).json({
+                return  res.status(200).json({
                     success: true,
                     data: {
                         totalBalance: 0,
@@ -236,7 +242,7 @@ const paymentService = {
             }
     
             // Response
-            res.status(200).json({
+            return res.status(200).json({
                 success: true,
                 data: {
                     totalBalance: freelancerFinancial.totalBalance,
@@ -246,7 +252,7 @@ const paymentService = {
             });
     
         } catch (error) {
-            res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+            return res.status(500).json({ success: false, message: 'Server error: ' + error.message });
         }
     },
     getStatisticsByAdmin:async(req,res)=>{

@@ -70,7 +70,45 @@ const feedbackService = {
             res.status(500).json({ success: false, message: error.message });
         }
     },    
-    deleteFeedback: async (req, res) => {
+    approveFeedback: async (req, res) => {
+        try {
+            const token = req.headers['authorization'];
+           
+            if (!token) {
+                return res.status(400).json({ success: false, message: 'Token is missing!' });
+            }
+    
+            const user = await getTokenFromDotNet(token);
+            if (!user) {
+                return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+            }
+    
+            const { feedbackId } = req.params;
+    
+            if (!mongoose.Types.ObjectId.isValid(feedbackId)) {
+                return res.status(400).json({ success: false, message: 'Invalid feedback ID format' });
+            }
+    
+            const updatedFeedback = await Feedback.findByIdAndUpdate(
+                feedbackId,
+                { status: "approve",isAllowed: 1 },
+                { new: true } 
+              );
+    
+            if (!updatedFeedback) {
+                return res.status(404).json({ success: false, message: 'Feedback not found' });
+            }
+    
+            res.status(200).json({
+                success: true,
+                message: 'Feedback Approve successfully'
+            });
+    
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+        }
+    },
+    danyFeedback: async (req, res) => {
         try {
             const token = req.headers['authorization'];
     
@@ -89,21 +127,25 @@ const feedbackService = {
                 return res.status(400).json({ success: false, message: 'Invalid feedback ID format' });
             }
     
-            const deletedFeedback = await Feedback.findByIdAndDelete(feedbackId);
+            const updatedFeedback = await Feedback.findByIdAndUpdate(
+                feedbackId,
+                { status: "dany" ,isAllowed: 0},
+                { new: true } // optional, returns the updated document
+              );
     
-            if (!deletedFeedback) {
+            if (!updatedFeedback) {
                 return res.status(404).json({ success: false, message: 'Feedback not found' });
             }
     
             res.status(200).json({
                 success: true,
-                message: 'Feedback deleted successfully'
+                message: 'Feedback Dany successfully'
             });
     
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
-    },
+    }
 };
 
 module.exports = { feedbackService };
