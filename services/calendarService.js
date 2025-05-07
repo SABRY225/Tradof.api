@@ -49,7 +49,7 @@ const calenderService = {
       if (!token) {
         return res
           .status(400)
-          .json({ success: false, message: "Token is missing!" });
+          .json ({ success: false, message: "Token is missing!" });
       }
 
       const user = await getTokenFromDotNet(token);

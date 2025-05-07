@@ -1,5 +1,6 @@
 const socketIo = require("socket.io");
 const Chat = require("../models/chatModel");
+const mongoose = require("mongoose");
 const Notification = require("../models/notificationModel");
 
 function initializeSocket(server) {
@@ -36,8 +37,6 @@ function initializeSocket(server) {
     });
   });
 }
-
-const mongoose = require("mongoose");
 
 async function handleSendMessage(io, socket, data) {
   try {
