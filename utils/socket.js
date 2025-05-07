@@ -1,5 +1,6 @@
 const socketIo = require("socket.io");
 const Chat = require("../models/chatModel");
+const Notification = require("../models/notificationModel");
 
 function initializeSocket(server) {
   const io = socketIo(server, {
@@ -23,8 +24,8 @@ function initializeSocket(server) {
       return await handleGetMessages(socket, { projectId, userId });
     });
 
-    socket.on("getNotifications", async (projectId, userId) => {
-      await handleGetNotifications(socket, projectId, userId);
+    socket.on("getNotifications", async ({ userId }) => {
+      await handleGetNotifications(socket, userId);
     });
 
     socket.on("seenNotification", async (notificationId) => {
@@ -128,7 +129,7 @@ async function handleGetMessages(socket, { projectId, userId }) {
       $or: [{ freelancerId: userId }, { companyId: userId }],
     });
 
-    console.log(chat , userId, projectId);
+    // console.log(chat, userId, projectId);
     if (!chat) {
       return socket.emit("messagesList", []);
     }
@@ -177,12 +178,13 @@ async function handleSeenNotification(socket, notificationId) {
 
 async function handleGetNotifications(socket, userId) {
   try {
-    const notifications = await Notification.find({ userId }).sort({
+    console.log(userId);
+    const notifications = await Notification.find({ receiverId: userId }).sort({
       timestamp: -1,
     });
 
     const unseenCount = await Notification.countDocuments({
-      userId,
+      receiverId: userId,
       seen: false,
     });
 
