@@ -4,11 +4,13 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 const startGrpcServer = require("./grpcServer");
-const { initializeSocket } = require("./utils/socket");
+const { initializeSocket } = require("./socket/initialize");
 const deleteOldPendingDocs = require('./helpers/cleaner');
+const MeetingService = require("./services/meetingService");
 
 // Run every hour
 setInterval(deleteOldPendingDocs, 60 * 60 * 1000); // 1 hour
+MeetingService.initializeCache().catch(console.error);
 
 connectDB();
 

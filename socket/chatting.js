@@ -1,42 +1,4 @@
-const socketIo = require("socket.io");
 const Chat = require("../models/chatModel");
-const mongoose = require("mongoose");
-const Notification = require("../models/notificationModel");
-
-function initializeSocket(server) {
-  const io = socketIo(server, {
-    cors: {
-      origin: "*",
-      methods: ["GET", "POST"],
-      allowedHeaders: ["Content-Type"],
-      credentials: true,
-    },
-    transports: ["websocket", "polling"],
-  });
-
-  io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
-
-    socket.on("sendMessage", async (data) => {
-      await handleSendMessage(io, socket, data);
-    });
-
-    socket.on("getMessages", async ({ projectId, userId }) => {
-      return await handleGetMessages(socket, { projectId, userId });
-    });
-
-    socket.on("getNotifications", async ({ userId }) => {
-      await handleGetNotifications(socket, userId);
-    });
-
-    socket.on("seenNotification", async (notificationId) => {
-      await handleSeenNotification(socket, notificationId);
-    });
-    socket.on("disconnect", () => {
-      console.log("User disconnected");
-    });
-  });
-}
 
 async function handleSendMessage(io, socket, data) {
   try {
@@ -164,37 +126,12 @@ async function handleGetMessages(socket, { projectId, userId }) {
   }
 }
 
-async function handleSeenNotification(socket, notificationId) {
-  try {
-    await Notification.findByIdAndUpdate(notificationId, { seen: true });
+module.exports = (socket, io) => {
+  socket.on("sendMessage", async (data) => {
+    await handleSendMessage(io, socket, data);
+  });
 
-    socket.emit("notificationSeen", { notificationId, seen: true });
-  } catch (error) {
-    console.error("Error updating notification:", error);
-    socket.emit("error", { message: "Error updating notification" });
-  }
-}
-
-async function handleGetNotifications(socket, userId) {
-  try {
-    console.log(userId);
-    const notifications = await Notification.find({ receiverId: userId }).sort({
-      timestamp: -1,
-    });
-
-    const unseenCount = await Notification.countDocuments({
-      receiverId: userId,
-      seen: false,
-    });
-
-    socket.emit("notificationsList", {
-      notifications,
-      unseenCount,
-    });
-  } catch (error) {
-    console.error("Error fetching notifications:", error);
-    socket.emit("error", { message: "Error fetching notifications" });
-  }
-}
-
-module.exports = { initializeSocket };
+  socket.on("getMessages", async ({ projectId, userId }) => {
+    return await handleGetMessages(socket, { projectId, userId });
+  });
+};

@@ -11,7 +11,9 @@ const eventSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true,
+    required: function () {
+      return this.isMeeting === false;
+    },
   },
   startDate: {
     type: Date,
@@ -25,9 +27,16 @@ const eventSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  participation: {
-    type: Object,
-    required: true,
+  isMeeting: {
+    type: Boolean,
+    default: false,
+  },
+  meeting: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Meeting",
+    required: function () {
+      return this.isMeeting === true;
+    },
   },
 });
 

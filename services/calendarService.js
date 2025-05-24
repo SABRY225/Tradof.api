@@ -4,6 +4,8 @@ const { default: mongoose } = require("mongoose");
 const { getTokenFromDotNet } = require("../helpers/getToken");
 const { getUserCalendarId } = require("../helpers/getCalenderId");
 const { log } = require("@grpc/grpc-js/build/src/logging");
+const { v4: uuidv4 } = require("uuid");
+const meetingService = require("../services/meetingService");
 
 const calenderService = {
   createCalender: async (req, res) => {
@@ -49,7 +51,7 @@ const calenderService = {
       if (!token) {
         return res
           .status(400)
-          .json ({ success: false, message: "Token is missing!" });
+          .json({ success: false, message: "Token is missing!" });
       }
 
       const user = await getTokenFromDotNet(token);
@@ -93,14 +95,19 @@ const calenderService = {
         filter.startDate = { $gte: startDate, $lte: endDate };
       }
       // else: no date filter — return all events for the user's calendar
-      const events = await Event.find(filter);
+      const events = await Event.find(filter).populate({
+        path: "meeting",
+        populate: {
+          path: "participants",
+        },
+      });
 
       if (events.length === 0) {
         return res
           .status(200)
           .json({ success: true, message: "No events found", data: [] });
       }
-
+      // console.log(events);
       res.status(200).json({ success: true, data: events });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -154,7 +161,15 @@ const calenderService = {
 
       const calendarId = await getUserCalendarId(user);
 
-      const { title, description, startDate, endDate, people } = req.body;
+      const {
+        title,
+        description,
+        startDate,
+        endDate,
+        people,
+        isMeeting,
+        participation,
+      } = req.body;
       // console.log(req.body);
       if (!mongoose.Types.ObjectId.isValid(calendarId)) {
         return res
@@ -175,6 +190,13 @@ const calenderService = {
         });
       }
 
+      if (isMeeting && !people) {
+        return res.status(400).json({
+          success: false,
+          message: "Meeting must have participating",
+        });
+      }
+
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (isNaN(start.getTime()) || isNaN(end.getTime())) {
@@ -190,10 +212,6 @@ const calenderService = {
           message: "start date must be before end date",
         });
       }
-      // const overlappingEvent = await Event.findOne({
-      //   calendarId,
-      //   $or: [{ startDate: { $lt: end }, endDate: { $gt: start } }],
-      // });
 
       const overlappingEvent = await Event.findOne({
         calendarId,
@@ -211,29 +229,55 @@ const calenderService = {
           ],
         },
       });
-    
+
       if (overlappingEvent) {
         return res.status(400).json({
           success: false,
           message: "There is already an event at this time.",
         });
       }
-
+      console.log(participation, user);
       // ✅ إنشاء الحدث
-      const event = new Event({
+      const event = {
         calendarId,
         title,
         description,
         startDate,
         endDate,
-        participation: people,
+        isMeeting,
+        meeting: undefined,
+      };
+
+      let meetingId = null;
+      if (isMeeting) {
+        meetingId = uuidv4(); // Generate unique meeting ID
+        const meeting = await meetingService.createMeeting(
+          meetingId,
+          user,
+          participation
+        );
+        if (meeting) {
+          event.meeting = meeting._id;
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: "Can't create meeting, try in another time",
+          });
+        }
+      }
+      // console.log(event);
+
+      const createdEvent = await Event.create(event);
+
+      res.status(201).json({
+        success: true,
+        message: "Event created successfully",
+        event: {
+          ...createdEvent.toObject(),
+          participation: await meetingService.getMeetingParticipants(meetingId),
+          meetingId,
+        },
       });
-
-      await event.save();
-
-      res
-        .status(201)
-        .json({ success: true, message: "Event created successfully", event });
     } catch (error) {
       console.error("Error creating event:", error);
       res.status(500).json({
