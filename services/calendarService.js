@@ -6,6 +6,7 @@ const { getUserCalendarId } = require("../helpers/getCalenderId");
 const { log } = require("@grpc/grpc-js/build/src/logging");
 const { v4: uuidv4 } = require("uuid");
 const meetingService = require("../services/meetingService");
+const { sendMeetingInvitation } = require("../helpers/sendEmail");
 
 const calenderService = {
   createCalender: async (req, res) => {
@@ -160,7 +161,7 @@ const calenderService = {
       }
 
       const calendarId = await getUserCalendarId(user);
-
+      console.log(req.body);
       const {
         title,
         description,
@@ -258,6 +259,21 @@ const calenderService = {
         );
         if (meeting) {
           event.meeting = meeting._id;
+
+          try {
+            // Send invitation to participant
+            await sendMeetingInvitation({
+              to: participation.email,
+              title,
+              description,
+              startDate,
+              endDate,
+              meetingId,
+            });
+          } catch (emailError) {
+            console.error("Error sending meeting invitations:", emailError);
+            // Continue with event creation even if email sending fails
+          }
         } else {
           return res.status(400).json({
             success: false,

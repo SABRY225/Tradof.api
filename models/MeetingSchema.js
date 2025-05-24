@@ -17,6 +17,11 @@ const participantSchema = new mongoose.Schema({
     type: Object,
     default: null,
   },
+  response: {
+    type: String,
+    enum: ["pending", "accepted", "declined"],
+    default: "pending",
+  },
   joinedAt: {
     type: Date,
     default: Date.now,
