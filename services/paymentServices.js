@@ -228,7 +228,7 @@ const paymentService ={
         try {
           const { projectId } = req.params;
       
-          const pFinancial = await PFinancial.findOne(projectId);
+          const pFinancial = await PFinancial.findOne({projectId});
           if (!pFinancial) {
             return res.status(404).json({ success: false, message: 'Project Financial not found!' });
           }
