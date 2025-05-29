@@ -11,4 +11,6 @@ router.get('/admin-statistics' ,paymentService.getStatisticsByAdmin);
 router.post('/request-withdrawProfits' ,paymentService.requestWithdrawProfits);
 router.patch('/request-withdrawProfits/:requestId' ,paymentService.editStatusRequest);
 router.get('/request-withdrawProfits' ,paymentService.getProfitRequests);
+// Freelancer or company
+router.get('/income-statistics' ,paymentService.getIncomeStatisticsCompany);
 module.exports = router;

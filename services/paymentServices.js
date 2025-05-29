@@ -76,7 +76,7 @@ const paymentService ={
           }
       
           const user = await getTokenFromDotNet(token);
-          if (!user) {
+          if (user.role=="companyAdmin") {
             return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
           }
       

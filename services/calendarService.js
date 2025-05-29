@@ -4,7 +4,7 @@ const { default: mongoose } = require("mongoose");
 const { getTokenFromDotNet } = require("../helpers/getToken");
 const { getUserCalendarId } = require("../helpers/getCalenderId");
 const { log } = require("@grpc/grpc-js/build/src/logging");
-const { v4: uuidv4 } = require("uuid");
+const { v4: uuidv4 } = require('uuid');
 const meetingService = require("../services/meetingService");
 const { sendMeetingInvitation } = require("../helpers/sendEmail");
 

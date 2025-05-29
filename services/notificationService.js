@@ -55,14 +55,14 @@ const notificationService = {
       }
 
       const user = await getTokenFromDotNet(token);
-      if (!user) {
+      if (!user.id) {
         return res.status(401).json({
           success: false,
           message: "Invalid token or user not found!",
         });
       }
 
-      const { companyId, sendEmail, alertOffers, messageChat } = req.body;
+      const {sendEmail, alertOffers, messageChat } = req.body;
 
       if (
         sendEmail === undefined ||
@@ -75,7 +75,7 @@ const notificationService = {
         });
       }
 
-      const filter = companyId ? { companyId } : { user };
+      const filter =  { user };
       const update = { sendEmail, alertOffers, messageChat };
       const options = { new: true, upsert: true }; // upsert = create if not exists
 
@@ -124,9 +124,9 @@ const notificationService = {
       res.status(200).json({
         success: true,
         data: {
-          alertOffers: settingNotification.alertOffers,
-          messageChat: settingNotification.messageChat,
-          sendEmail: settingNotification.sendEmail,
+          alertOffers: settingNotification.alertOffers?1:0,
+          messageChat: settingNotification.messageChat?1:0,
+          sendEmail: settingNotification.sendEmail?1:0,
         },
       });
     } catch (error) {

@@ -28,6 +28,41 @@ const subscriptionService = {
             res.status(500).json({ success: false, message: err.message });
         }
     },
+    getSubscriptionDetails: async (req, res) => {
+        try {
+            const token = req.headers['authorization'];
+
+            if (!token) {
+                return res.status(400).json({ success: false, message: 'Token is missing!' });
+            }
+
+            const user = await getTokenFromDotNet(token);
+            if (!user) {
+                return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+            }
+            const sub = await SubPackage.findOne({ "company.id": user.id })
+                .sort({ startSub: -1 })
+                .populate('packageId');
+
+            if (!sub) return res.status(200).json({ success: false, message: 'No subscription found' });
+
+            const start = new Date(sub.startSub);
+            const end = new Date(start);
+            end.setMonth(end.getMonth() + sub.packageId.durationInMonths);
+
+            const now = new Date();
+            if (now > end) {
+                return res.status(400).json({ success: false, message: "The company is not subscribed to any package or the package has expired" });
+            }
+
+            const diffTime = Math.abs(end - now);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            res.status(200).json({ success: true, data: {packageName:sub.packageId.name,price:sub.packageId.price,remaining:diffDays}});
+        } catch (err) {
+            res.status(500).json({ success: false, message: err.message });
+        }
+    },
     getSubscriptionByCompany: async (req, res) => {
         try {
             const token = req.headers['authorization'];
@@ -83,6 +118,7 @@ const subscriptionService = {
 
             res.json({
                 expired: false,
+                sub,
                 remaining: { days, months, years }
             });
         } catch (err) {
