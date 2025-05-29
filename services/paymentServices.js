@@ -161,6 +161,8 @@ const paymentService ={
           }
       
           const session = await Session.findOne({ orderId });
+          console.log(session);
+          
           if (!session) return res.status(404).json({ message: "Session not found" });
       
           const adminWalletPromise = AdminWallet.findOne({ _id: "67f7bda255cec58cb4c3fd6b" });
