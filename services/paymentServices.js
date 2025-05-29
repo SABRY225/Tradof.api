@@ -198,7 +198,7 @@ const paymentService ={
               return res.status(404).json({ message: "Freelancer or Company Wallet not found" });
             }
       
-            pFinancial.status = "accepted";
+            pFinancial.paymentStatus = "paid";
       
             adminWallet.totalPendingMoney += pFinancial.budget;
       
@@ -228,7 +228,7 @@ const paymentService ={
         try {
           const { projectId } = req.params;
       
-          const pFinancial = await PFinancial.findById(projectId);
+          const pFinancial = await PFinancial.findOne(projectId);
           if (!pFinancial) {
             return res.status(404).json({ success: false, message: 'Project Financial not found!' });
           }
