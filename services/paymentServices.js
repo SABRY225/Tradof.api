@@ -117,6 +117,7 @@ const paymentService ={
             }),
             Session.create({
               type: "PFinancial",
+              typeId:"",
               orderId: data.orderId,
               status: "pending"
             })
@@ -189,8 +190,8 @@ const paymentService ={
       
             const [adminWallet, freelancerWallet, companyWallet] = await Promise.all([
               adminWalletPromise,
-              FreelancerWallet.findOne({ _id: pFinancial.freelancerId }),
-              CompanyWallet.findOne({ _id: pFinancial.company.id })
+              FreelancerWallet.findOne({ freelancerId: pFinancial.freelancerId }),
+              CompanyWallet.findOne({ companyId: pFinancial.company.id })
             ]);
       
             if (!freelancerWallet || !companyWallet) {
@@ -234,8 +235,8 @@ const paymentService ={
       
           const [adminWallet, freelancerWallet, companyWallet] = await Promise.all([
             AdminWallet.findOne({ _id: "67f7bda255cec58cb4c3fd6b" }),
-            FreelancerWallet.findOne({ _id: pFinancial.freelancerId }),
-            CompanyWallet.findOne({ _id: pFinancial.company.id })
+            FreelancerWallet.findOne({ freelancerId :pFinancial.freelancerId }),
+            CompanyWallet.findOne({ companyId: pFinancial.company.id })
           ]);
       
           if (!adminWallet || !freelancerWallet || !companyWallet) {
