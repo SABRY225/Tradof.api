@@ -328,7 +328,7 @@ const paymentService = {
             if (!amount || !paymentDetails) {
                 return res.status(400).json({ success: false, message: 'freelancerId and amount are required!' });
             }
-            const freelancerWallet = await FreelancerWallet.findOne({ "freelancer.id": user.id })
+            const freelancerWallet = await FreelancerWallet.findOne({ freelancerId: user.id })
             if (!freelancerWallet) {
                 return res.status(400).json({ success: false, message: 'The freelancer has no credit' });
             }
