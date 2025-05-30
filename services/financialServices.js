@@ -320,15 +320,15 @@ const paymentService = {
             }
 
             const user = await getTokenFromDotNet(token);
-            if (!user) {
+            if (!user.role=="Freelancer") {
                 return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
             }
-            const { freelancerId, amount, paymentDetails } = req.body;
+            const { amount, paymentDetails } = req.body;
             // Validation
-            if (!freelancerId || !amount || !paymentDetails) {
+            if (!amount || !paymentDetails) {
                 return res.status(400).json({ success: false, message: 'freelancerId and amount are required!' });
             }
-            const freelancerWallet = await FreelancerWallet.findOne({ "freelancer.id": freelancerId })
+            const freelancerWallet = await FreelancerWallet.findOne({ "freelancer.id": user.id })
             if (!freelancerWallet) {
                 return res.status(400).json({ success: false, message: 'The freelancer has no credit' });
             }
