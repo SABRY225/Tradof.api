@@ -23,6 +23,10 @@ const subscriptionService = {
 
             if (!sub) return res.status(200).json({ success: false, message: 'No subscription found' });
 
+            if(sub.status=="pending"){
+                return res.status(200).json({ success: false, message: 'No subscription found' });
+            }
+
             res.status(200).json({ success: true, data: sub });
         } catch (err) {
             res.status(500).json({ success: false, message: err.message });
