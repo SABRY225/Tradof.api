@@ -265,7 +265,7 @@ const paymentService = {
                 success: true,
                 data: {
                     totalBalance: freelancerFinancial.totalBalance,
-                    availableBalance: freelancerFinancial.previousBalance,
+                    availableBalance: freelancerFinancial.availableBalance,
                     pendingBalance: freelancerFinancial.pendingBalance
                 }
             });
