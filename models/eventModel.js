@@ -27,6 +27,10 @@ const eventSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  notifiedBeforeStart: {
+    type: Boolean,
+    default: false
+  },
   isMeeting: {
     type: Boolean,
     default: false,

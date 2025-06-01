@@ -12,6 +12,8 @@ const FreelancerWallet = require("../models/freelancerWalletModel");
 const AdminWallet = require("../models/AdminWalletModel");
 const WithdrawProfit = require("../models/withdrawProfitModel");
 const FinancialHistoryFreelancer = require("../models/financialHistoryFreelancerModel");
+const Invoice = require("../models/InvoiceModel");
+const Notification = require("../models/notificationModel");
 
 const paymentService = {
     getStatusProject: async (req, res) => {
@@ -70,7 +72,7 @@ const paymentService = {
             const result = items.map(project => {
                 // بنجيب أحدث دفعة خاصة بالمشروع الحالي
                 const latestPayment = payments.find(p => p.projectId == project.id);
-            
+
                 return {
                     ...project,
                     paymentStatus: latestPayment?.paymentStatus || "pending",
@@ -78,29 +80,29 @@ const paymentService = {
                     paymentDate: latestPayment?.paymentDate || null,
                 };
             });
-            
+
             // 6. نرجع النتيجة
             res.status(200).json({
                 success: true,
                 data: result.map((project) => ({
-                  user: {
-                    id: project.freelancerId,
-                    profileImageUrl: project.freelancerProfileImageUrl,
-                    firstName: project.freelancerFirstName,
-                    lastName: project.freelancerLastName
-                  },
-                  prjectData:{
-                    id:project.id,
-                    name:project.name,
-                    depoistPrice:project.paymentPrice,
-                    deliveryTime:project.days,
-                    posted:project.startDate,
-                    depoistDate:project.price
-                  },
-                  paymentStatus:project.paymentStatus
+                    user: {
+                        id: project.freelancerId,
+                        profileImageUrl: project.freelancerProfileImageUrl,
+                        firstName: project.freelancerFirstName,
+                        lastName: project.freelancerLastName
+                    },
+                    prjectData: {
+                        id: project.id,
+                        name: project.name,
+                        depoistPrice: project.paymentPrice,
+                        deliveryTime: project.days,
+                        posted: project.startDate,
+                        depoistDate: project.price
+                    },
+                    paymentStatus: project.paymentStatus
                 }))
-              });
-              
+            });
+
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
@@ -134,12 +136,12 @@ const paymentService = {
             const payments = await PFinancial.find({ projectId: { $in: projectIds } })
                 .sort({ createdAt: -1 }); // ترتيب عشان ندي الأولوية للأحدث
 
-             
+
             // 5. نركب البيانات النهائية
             const result = items.map(project => {
                 // بنجيب أحدث دفعة خاصة بالمشروع الحالي
                 const latestPayment = payments.find(p => p.projectId == project.id);
-            
+
                 return {
                     ...project,
                     paymentStatus: latestPayment?.paymentStatus || "pending",
@@ -147,29 +149,29 @@ const paymentService = {
                     paymentDate: latestPayment?.paymentDate || null,
                 };
             });
-            
+
             // 6. نرجع النتيجة
             res.status(200).json({
                 success: true,
                 data: result.map((project) => ({
-                  user: {
-                    id: project.companyId,
-                    profileImageUrl: project.profileImageUrl,
-                    firstName: project.firstName,
-                    lastName: project.lastName
-                  },
-                  prjectData:{
-                    id:project.id,
-                    name:project.name,
-                    depoistPrice:project.paymentPrice,
-                    deliveryTime:project.days,
-                    posted:project.startDate,
-                    depoistDate:project.price
-                  },
-                  paymentStatus:project.paymentStatus
+                    user: {
+                        id: project.companyId,
+                        profileImageUrl: project.profileImageUrl,
+                        firstName: project.firstName,
+                        lastName: project.lastName
+                    },
+                    prjectData: {
+                        id: project.id,
+                        name: project.name,
+                        depoistPrice: project.paymentPrice,
+                        deliveryTime: project.days,
+                        posted: project.startDate,
+                        depoistDate: project.price
+                    },
+                    paymentStatus: project.paymentStatus
                 }))
-              });
-              
+            });
+
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
@@ -320,20 +322,24 @@ const paymentService = {
             }
 
             const user = await getTokenFromDotNet(token);
-            if (!user.role=="Freelancer") {
-                return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+            if (!user.role || user.role !== "Freelancer") {
+                return res.status(401).json({ success: false, message: 'Invalid token or user not authorized!' });
             }
+
             const { amount, paymentDetails } = req.body;
+
             // Validation
             if (!amount || !paymentDetails) {
-                return res.status(400).json({ success: false, message: 'freelancerId and amount are required!' });
+                return res.status(400).json({ success: false, message: 'Amount and payment details are required!' });
             }
-            const freelancerWallet = await FreelancerWallet.findOne({ freelancerId: user.id })
+
+            const freelancerWallet = await FreelancerWallet.findOne({ freelancerId: user.id });
             if (!freelancerWallet) {
-                return res.status(400).json({ success: false, message: 'The freelancer has no credit' });
+                return res.status(400).json({ success: false, message: 'The freelancer has no wallet.' });
             }
+
             if (freelancerWallet.availableBalance < amount) {
-                return res.status(400).json({ success: false, message: 'The amount is greater than the available balance' });
+                return res.status(400).json({ success: false, message: 'The amount is greater than the available balance.' });
             }
 
             const newRequest = new WithdrawProfit({
@@ -345,7 +351,24 @@ const paymentService = {
 
             await newRequest.save();
 
-            res.status(201).json({ success: true, message: 'Withdraw request submitted successfully!' });
+            // 🧾 إنشاء الفاتورة
+            const invoiceNumber = `INV-${Date.now()}`;
+            const invoice = new Invoice({
+                type: "Withdraw Profits",
+                invoiceNumber,
+                withdrawProfitId: newRequest._id
+            });
+
+            await invoice.save();
+            const newNotification = new Notification({ type:"Withdraw Profit", receiverId:"admin", message:"There is a request to withdraw new profits" });
+            await newNotification.save();
+            res.status(201).json({
+                success: true,
+                message: 'Withdraw request submitted and invoice created successfully!',
+                withdrawId: newRequest._id,
+                invoiceId: invoice._id
+            });
+
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
@@ -360,35 +383,44 @@ const paymentService = {
             }
 
             const user = await getTokenFromDotNet(token);
-            if (!user) {
-                return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+            if (!user || user.role !== "admin") {
+                return res.status(401).json({ success: false, message: 'Unauthorized' });
             }
 
-            if (user.role !== "admin") {
-                return res.status(401).json({ success: false, message: 'You are not an admin' });
-            }
             const { requestId } = req.params;
             const { paymentStatus } = req.body;
 
-            // Validation
-            if (!requestId) {
-                return res.status(400).json({ success: false, message: 'Invalid requestId' });
+            if (!requestId || !paymentStatus) {
+                return res.status(400).json({ success: false, message: 'Invalid input' });
             }
 
-            const updateData = {};
-            if (paymentStatus) updateData.paymentStatus = paymentStatus;
-
-            const updatedRequest = await WithdrawProfit.findByIdAndUpdate(
-                requestId,
-                { $set: updateData },
-                { new: true }
-            );
-
-            if (!updatedRequest) {
+            const withdrawRequest = await WithdrawProfit.findById(requestId);
+            if (!withdrawRequest) {
                 return res.status(404).json({ success: false, message: 'Withdraw request not found!' });
             }
 
-            res.status(200).json({ success: true, message: 'Withdraw request updated successfully.' });
+            if (paymentStatus === "paid") {
+                const freelancerWallet = await FreelancerWallet.findOne({ freelancerId: withdrawRequest.freelancer.id });
+                if (!freelancerWallet) {
+                    return res.status(404).json({ success: false, message: 'Freelancer wallet not found' });
+                }
+
+                if (freelancerWallet.availableBalance < withdrawRequest.amount) {
+                    return res.status(400).json({ success: false, message: 'Insufficient balance in freelancer wallet' });
+                }
+
+                freelancerWallet.availableBalance -= withdrawRequest.amount;
+                freelancerWallet.totalBalance = freelancerWallet.availableBalance + freelancerWallet.pendingBalance;
+
+                await freelancerWallet.save();
+            }
+
+            withdrawRequest.paymentStatus = paymentStatus;
+            await withdrawRequest.save();
+            const newNotification = new Notification({ type:"Withdraw Profit", receiverId:withdrawRequest.freelancer.id, message:"The money was successfully sent, please review your bank and also bills" });
+            await newNotification.save();
+            res.status(200).json({ success: true, message: 'Withdraw request updated and wallet adjusted successfully.' });
+
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
         }
@@ -419,97 +451,97 @@ const paymentService = {
         }
     },
     getIncomeStatisticsCompany: async (req, res, next) => {
-    const token = req.headers['authorization'];
+        const token = req.headers['authorization'];
 
-    if (!token) {
-        return res.status(400).json({ success: false, message: 'Token is missing!' });
-    }
-
-    const user = await getTokenFromDotNet(token);
-    if (!user) {
-        return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
-    }
-
-    let data;
-    if (user.role === "Freelancer") {
-        data = await FinancialHistoryFreelancer.findOne({ "user.id": user.id });
-        if (!data) {
-            data = await FinancialHistoryFreelancer.create({
-                user: user,
-                statistics: new Map()
-            });
+        if (!token) {
+            return res.status(400).json({ success: false, message: 'Token is missing!' });
         }
-    } else {
-        data = await FinancialHistoryCompany.findOne({ "user.id": user.id });
-        if (!data) {
-            data = await FinancialHistoryCompany.create({
-                user: user,
-                statistics: new Map()
-            });
+
+        const user = await getTokenFromDotNet(token);
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
         }
-    }
 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-    const currentDate = new Date();
-    const currentYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth() + 1;
-
-    const monthsToShow = 6;
-    const result = { [currentYear]: {} };
-    let months = [];
-
-    // حساب الشهور السابقة (5 شهور قبل الشهر الحالي على الأكثر)
-    let prevCount = Math.min(monthsToShow - 1, currentMonth - 1);
-
-    // 1. الشهور السابقة
-    for (let i = currentMonth - prevCount; i < currentMonth; i++) {
-        months.push(i);
-    }
-
-    // 2. الشهر الحالي
-    months.push(currentMonth);
-
-    // 3. لو لسه أقل من 6 شهور، كمل من الشهور التالية
-    let nextMonth = currentMonth + 1;
-    while (months.length < monthsToShow && nextMonth <= 12) {
-        months.push(nextMonth);
-        nextMonth++;
-    }
-
-    let maxValue = -Infinity;
-
-    // الحصول على بيانات السنة (هي Map)
-    // ممكن تكون undefined لو السنة دي مش موجودة أصلا في الداتا
-    const yearStats = data.statistics.get(String(currentYear)) || {};
-
-    months.forEach(month => {
-        const monthName = monthNames[month - 1];
-        // بيانات الشهر، لو مش موجودة نحط القيمة الافتراضية من schema
-        const monthData = yearStats[monthName] || { pending: 0, previous: 0, available: 0 };
-
-        // حسب اللي عندك في schema Freelancer أو Company، ممكن تغير `available` أو `previous` حسب الدور
-        const pendingValue = monthData.pending || 0;
-        const previousValue = monthData.previous || 0; // أو 0 افتراضياً
-
-        result[currentYear][monthName] = {
-            pending: pendingValue,
-            previous: previousValue
-        };
-
-        if (pendingValue > maxValue) {
-            maxValue = pendingValue;
+        let data;
+        if (user.role === "Freelancer") {
+            data = await FinancialHistoryFreelancer.findOne({ "user.id": user.id });
+            if (!data) {
+                data = await FinancialHistoryFreelancer.create({
+                    user: user,
+                    statistics: new Map()
+                });
+            }
+        } else {
+            data = await FinancialHistoryCompany.findOne({ "user.id": user.id });
+            if (!data) {
+                data = await FinancialHistoryCompany.create({
+                    user: user,
+                    statistics: new Map()
+                });
+            }
         }
-    });
 
-    if (maxValue === -Infinity) maxValue = 0;
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    res.status(200).json({
-        status: 'success',
-        data: result,
-        maxValue: maxValue
-    });
-}
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1;
+
+        const monthsToShow = 6;
+        const result = { [currentYear]: {} };
+        let months = [];
+
+        // حساب الشهور السابقة (5 شهور قبل الشهر الحالي على الأكثر)
+        let prevCount = Math.min(monthsToShow - 1, currentMonth - 1);
+
+        // 1. الشهور السابقة
+        for (let i = currentMonth - prevCount; i < currentMonth; i++) {
+            months.push(i);
+        }
+
+        // 2. الشهر الحالي
+        months.push(currentMonth);
+
+        // 3. لو لسه أقل من 6 شهور، كمل من الشهور التالية
+        let nextMonth = currentMonth + 1;
+        while (months.length < monthsToShow && nextMonth <= 12) {
+            months.push(nextMonth);
+            nextMonth++;
+        }
+
+        let maxValue = -Infinity;
+
+        // الحصول على بيانات السنة (هي Map)
+        // ممكن تكون undefined لو السنة دي مش موجودة أصلا في الداتا
+        const yearStats = data.statistics.get(String(currentYear)) || {};
+
+        months.forEach(month => {
+            const monthName = monthNames[month - 1];
+            // بيانات الشهر، لو مش موجودة نحط القيمة الافتراضية من schema
+            const monthData = yearStats[monthName] || { pending: 0, previous: 0, available: 0 };
+
+            // حسب اللي عندك في schema Freelancer أو Company، ممكن تغير `available` أو `previous` حسب الدور
+            const pendingValue = monthData.pending || 0;
+            const previousValue = monthData.previous || 0; // أو 0 افتراضياً
+
+            result[currentYear][monthName] = {
+                pending: pendingValue,
+                previous: previousValue
+            };
+
+            if (pendingValue > maxValue) {
+                maxValue = pendingValue;
+            }
+        });
+
+        if (maxValue === -Infinity) maxValue = 0;
+
+        res.status(200).json({
+            status: 'success',
+            data: result,
+            maxValue: maxValue
+        });
+    }
 
 }
 

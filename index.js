@@ -7,10 +7,13 @@ const startGrpcServer = require("./grpcServer");
 const { initializeSocket } = require("./socket/initialize");
 const {deleteOldPendingDocs,notifyExpiringPackages} = require("./helpers/cleaner");
 const MeetingService = require("./services/meetingService");
-
+const checkUnseenMessages = require("./helpers/checkUnseenMessages");
+const notifyUpcomingEvents = require("./helpers/notifyUpcomingEvents");
 // Run every hour
 setInterval(deleteOldPendingDocs, 60 * 60 * 1000); // 1 hour
 setInterval(notifyExpiringPackages, 60 * 60 * 1000); // 1 hour
+setInterval(checkUnseenMessages, 10 * 60 * 1000); // 1 hour
+setInterval(notifyUpcomingEvents, 10*60 * 1000);
 MeetingService.initializeCache().catch(console.error);
 
 connectDB();
@@ -33,6 +36,7 @@ const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const financialRoutes = require("./routes/financialRoutes");
 const meetingResponseRoutes = require("./routes/meetingResponseRoutes");
+
 
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/askQuestion", askQuestionRoutes);

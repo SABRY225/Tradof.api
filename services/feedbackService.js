@@ -1,6 +1,7 @@
 const Feedback = require("../models/feedbackModel");
 const { getTokenFromDotNet } = require("../helpers/getToken");
 const { default: mongoose } = require("mongoose");
+const Notification = require("../models/notificationModel");
 
 const feedbackService = {
     sendFeedback: async (req, res) => {
@@ -29,7 +30,8 @@ const feedbackService = {
             });
     
             await newFeedback.save();
-    
+            const newNotification = new Notification({ type:"Feedback", receiverId:"admin", message:"A new feedback has been added to the platform that needs to be reviewed." });
+            await newNotification.save();
             res.status(201).json({
                 success: true,
                 message: "Feedback sent successfully",

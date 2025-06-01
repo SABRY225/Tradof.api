@@ -4,8 +4,10 @@ const messageSchema = new mongoose.Schema({
     senderId: { type: String, required: true },
     message: { type: String, required: true },
     seen: { type: Boolean, default: false },
+    notified: { type: Boolean, default: false }, 
     timestamp: { type: Date, default: Date.now }
 });
+
 
 const chatSchema = new mongoose.Schema({
     projectId: { type: String, required: true },
