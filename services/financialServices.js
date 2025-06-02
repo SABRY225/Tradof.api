@@ -435,11 +435,13 @@ const paymentService = {
             }
 
             const user = await getTokenFromDotNet(token);
+            console.log(user);
+            
             if (!user) {
                 return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
             }
 
-            if (user.role !== "admin") {
+            if (user.role !== "Admin") {
                 return res.status(401).json({ success: false, message: 'You are not an admin' });
             }
 
