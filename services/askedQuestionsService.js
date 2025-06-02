@@ -1,6 +1,7 @@
 const { default: mongoose } = require("mongoose");
 const { getTokenFromDotNet } = require("../helpers/getToken");
 const AskedQuestions = require("../models/askedQuestionsModel");
+const Notification = require("../models/notificationModel");
 
 const askedQuestionsService = {
     createQuestion: async (req, res) => {
@@ -25,6 +26,8 @@ const askedQuestionsService = {
             }
             const newQuestion = new AskedQuestions({user,question});
             await newQuestion.save();
+            const newNotification = new Notification({ type:"AskQuestion", receiverId:"admin", message:"A new ask question has been sent" });
+            await newNotification.save();
             res.status(201).json({ success: true, message: "The question was sent to the officials" });
         } catch (error) {
             res.status(500).json({ success: false, message:error.message });
@@ -128,7 +131,8 @@ const askedQuestionsService = {
     
             question.answer = answer;
             await question.save();
-    
+            const newNotification = new Notification({ type:"AskQuestion", receiverId:question.user.id, message:question.answer });
+            await newNotification.save();
             res.status(200).json({ success: true, message: "Question answered successfully", question });
     
         } catch (error) {
