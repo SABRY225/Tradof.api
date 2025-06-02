@@ -5,22 +5,7 @@ const SettingNotification = require("../models/SettingNotificationModel");
 const notificationService = {
   sendNotification: async (req, res) => {
     try {
-      const token = req.headers["authorization"];
-
-      if (!token) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Token is missing!" });
-      }
-
-      const user = await getTokenFromDotNet(token);
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: "Invalid token or user not found!",
-        });
-      }
-
+    
       const { type, receiverId, message, description } = req.body;
       if (!type || !receiverId || !message) {
         return res.status(400).json({
