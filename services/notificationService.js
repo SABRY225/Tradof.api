@@ -75,17 +75,19 @@ const notificationService = {
         });
       }
 
-      const filter = companyId ? { companyId } : { user };
-      const update = { sendEmail, alertOffers, messageChat };
-      const options = { new: true, upsert: true }; // upsert = create if not exists
-
+      const filter = { "user.id": user.id };
+      const update = {
+        user,
+        sendEmail,
+        alertOffers,
+        messageChat,
+      };
+      const options = { new: true, upsert: true };
       const updatedSetting = await SettingNotification.findOneAndUpdate(
         filter,
         update,
         options
       );
-
-      updatedSetting.save();
 
       res.status(200).json({
         success: true,
@@ -121,6 +123,7 @@ const notificationService = {
           message: "Notification setting not found",
         });
       }
+      // console.log(settingNotification);
       res.status(200).json({
         success: true,
         data: {
