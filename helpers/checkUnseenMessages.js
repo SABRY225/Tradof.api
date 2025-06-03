@@ -20,7 +20,6 @@ const checkUnseenMessages = async () => {
                     : chat.freelancerId;
 
                 const newNotification = await Notification.create({ type:"Message", receiverId, message:"A new message has not been answered" });
-                 await newNotification.save();
 
                 // تحديث الرسائل
                 chat.messages.forEach(msg => {

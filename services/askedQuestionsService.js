@@ -25,9 +25,7 @@ const askedQuestionsService = {
                 return res.status(400).json({ success: false, message: "This question has already been asked!" });
             }
             const newQuestion = await AskedQuestions.create({user,question});
-            await newQuestion.save();
             const newNotification = await Notification.create({ type:"AskQuestion", receiverId:"admin", message:"A new ask question has been sent" });
-            await newNotification.save();
             res.status(201).json({ success: true, message: "The question was sent to the officials" });
         } catch (error) {
             res.status(500).json({ success: false, message:error.message });
@@ -132,7 +130,6 @@ const askedQuestionsService = {
             question.answer = answer;
             await question.save();
             const newNotification = await Notification.create({ type:"AskQuestion", receiverId:question.user.id, message:question.answer });
-            await newNotification.save();
             res.status(200).json({ success: true, message: "Question answered successfully", question });
     
         } catch (error) {

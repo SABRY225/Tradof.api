@@ -187,10 +187,8 @@ const paymentService = {
           invoiceNumber,
           subPackageId: subPackage._id
         });
-        await invoice.save();
 
         const newNotification =await Notification.create({ type:"Subscriptions", receiverId:subPackage.company.id, message:"The package was successfully subscribed" });
-        await newNotification.save();
 
       } else if (session.type === "PFinancial") {
         const pFinancial = await PFinancial.findOne({ _id: session.typeId });
@@ -230,9 +228,7 @@ const paymentService = {
           invoiceNumber,
           pFinancialId: pFinancial._id
         });
-        await invoice.save();
         const newNotification = await Notification.create({ type:"Project", receiverId:pFinancial.company.id, message:"Congratulations, the project has been successfully paid" });
-        await newNotification.save();
       }
 
       return res.status(200).json({ success: true, message: "Payment confirmed, data updated, and invoice created." });

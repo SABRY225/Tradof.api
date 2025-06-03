@@ -368,15 +368,12 @@ requestWithdrawProfits: async (req, res) => {
             withdrawProfitId: newRequest._id
         });
 
-        await invoice.save();
-
         const newNotification = await Notification.create({
             type: "Withdraw Profit",
             receiverId: "admin",
             message: "There is a request to withdraw new profits"
         });
 
-        await newNotification.save();
 
         res.status(201).json({
             success: true,
@@ -434,13 +431,11 @@ requestWithdrawProfits: async (req, res) => {
                 await adminWallet.save();
                 await freelancerWallet.save();
                 const newNotification = await Notification.create({ type:"Withdraw Profit", receiverId:withdrawRequest.freelancer.id, message:"The money was successfully sent, please review your bank and also bills" });
-                await newNotification.save();
             }
 
             withdrawRequest.paymentStatus = paymentStatus;
             await withdrawRequest.save();
             const newNotification = await Notification.create({ type:"Withdraw Profit", receiverId:withdrawRequest.freelancer.id, message:"Your request has been rejected for the process of withdrawing profits, please verify the bank account data" });
-            await newNotification.save();
             res.status(200).json({ success: true, message: 'Withdraw request updated and wallet adjusted successfully.' });
 
         } catch (error) {

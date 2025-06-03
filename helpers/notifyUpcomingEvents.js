@@ -15,7 +15,6 @@ const notifyUpcomingEvents = async () => {
       const userId = event.calendarId?.user.id ;
 
       const newNotification = await Notification.create({ type:"Calendar", receiverId:userId, message:`The event "${event.title}" will start in half an hour.` });
-       await newNotification.save();
 
 
       event.notifiedBeforeStart = true;

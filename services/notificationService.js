@@ -20,7 +20,6 @@ const notificationService = {
         message,
         description,
       });
-      await newNotification.save();
 
       res.status(201).json({
         success: true,
