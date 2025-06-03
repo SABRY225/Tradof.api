@@ -36,6 +36,7 @@ const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const financialRoutes = require("./routes/financialRoutes");
 const meetingResponseRoutes = require("./routes/meetingResponseRoutes");
+const translationExamRoutes = require("./routes/translationExamRoutes");
 
 
 app.use("/api/feedback", feedbackRoutes);
@@ -49,6 +50,7 @@ app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/financial", financialRoutes);
 app.use("/api/meeting", meetingResponseRoutes);
+app.use("/api/translation-exam", translationExamRoutes);
 
 app.use((req, res, next) => {
   res.status(404).json({
