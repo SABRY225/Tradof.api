@@ -182,14 +182,14 @@ const paymentService = {
         ]);
 
         const invoiceNumber = `INV-${Date.now()}`;
-        const invoice = new Invoice({
+        const invoice = await Invoice.create({
           type: "Subscription",
           invoiceNumber,
           subPackageId: subPackage._id
         });
         await invoice.save();
 
-        const newNotification = new Notification({ type:"Subscriptions", receiverId:subPackage.company.id, message:"The package was successfully subscribed" });
+        const newNotification =await Notification.create({ type:"Subscriptions", receiverId:subPackage.company.id, message:"The package was successfully subscribed" });
         await newNotification.save();
 
       } else if (session.type === "PFinancial") {
@@ -225,13 +225,13 @@ const paymentService = {
         ]);
 
         const invoiceNumber = `INV-${Date.now()}`;
-        const invoice = new Invoice({
+        const invoice = await Invoice.create({
           type: "Pay Project",
           invoiceNumber,
           pFinancialId: pFinancial._id
         });
         await invoice.save();
-        const newNotification = new Notification({ type:"Project", receiverId:pFinancial.company.id, message:"Congratulations, the project has been successfully paid" });
+        const newNotification = await Notification.create({ type:"Project", receiverId:pFinancial.company.id, message:"Congratulations, the project has been successfully paid" });
         await newNotification.save();
       }
 

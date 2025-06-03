@@ -30,7 +30,7 @@ const feedbackService = {
             });
     
             await newFeedback.save();
-            const newNotification = new Notification({ type:"Feedback", receiverId:"admin", message:"A new feedback has been added to the platform that needs to be reviewed." });
+            const newNotification = await Notification.create({ type:"Feedback", receiverId:"admin", message:"A new feedback has been added to the platform that needs to be reviewed." });
             await newNotification.save();
             res.status(201).json({
                 success: true,

@@ -44,7 +44,7 @@ const technicalSupportService = {
     
             chat.messages.push({ senderId, message, file: fileUrl });
             await chat.save();
-            const newNotification = new Notification({ type:"Technical Support", receiverId:"admin", message:"Message from technical support" });
+            const newNotification = await Notification.create({ type:"Technical Support", receiverId:"admin", message:"Message from technical support" });
             await newNotification.save();
             res.status(201).json({ success: true, message: "Message sent successfully" });
     
@@ -91,7 +91,7 @@ const technicalSupportService = {
   
           chat.messages.push({ senderId:"admin", message, file: fileUrl });
           await chat.save();
-          const newNotification = new Notification({ type:"Technical Support",receiverId:"admin", message:`Message from the user ${user.firstName+" "+user.lastName}` });
+          const newNotification = await Notification.create({ type:"Technical Support",receiverId:"admin", message:`Message from the user ${user.firstName+" "+user.lastName}` });
           await newNotification.save();
           res.status(201).json({ success: true, message: "Message sent successfully" });
   

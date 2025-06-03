@@ -10,11 +10,11 @@ const notificationService = {
       if (!type || !receiverId || !message) {
         return res.status(400).json({
           success: false,
-          message: "Type and receiver and message are required!",
+          message: "Type and sender and message are required!",
         });
       }
 
-      const newNotification = new Notification({
+      const newNotification = await Notification.create({
         type,
         receiverId,
         message,
