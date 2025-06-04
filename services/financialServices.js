@@ -575,9 +575,14 @@ const financialService = {
             }
 
             const invoices = await Invoice.find({ "user.id": user.id })
-                .populate("pFinancialId")
-                .populate("subPackageId")
-                .populate("withdrawProfitId");
+    .populate("pFinancialId")
+    .populate({
+        path: "subPackageId",
+        populate: {
+            path: "packageId"  
+        }
+    })
+    .populate("withdrawProfitId");
             if(!invoices){
               return res.status(200).json({data:[]});
             }
