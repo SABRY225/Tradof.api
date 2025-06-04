@@ -60,8 +60,6 @@ const paymentService = {
           status: "pending"
         });
         const newSession = await Session.create({ type: "SubPackage", typeId: newSub._id, orderId: data.orderId, status: "pending" })
-        await newSub.save();
-        await newSession.save();
         res.status(201).json({ success: true, message: "Please pay for the package.", type: "paid", iframURL: data.iframURL });
       }
     } catch (error) {
@@ -152,93 +150,135 @@ const paymentService = {
       return res.status(500).json({ success: false, message: err.message });
     }
   },
-  callBack: async (req, res) => {
-    try {
-      const { success, orderId, message } = req.body;
+ callBack: async (req, res) => {
+  try {
+    const { success, orderId, message } = req.body;
 
-      if (!success) {
-        return res.status(400).json({ success: false, message: "Payment was not successful", details: message });
-      }
+    if (!success) {
+      return res.status(400).json({ success: false, message: "Payment was not successful", details: message });
+    }
 
-      const session = await Session.findOne({ orderId });
-      if (!session) return res.status(404).json({ message: "Session not found" });
+    const session = await Session.findOne({ orderId });
+    if (!session) return res.status(404).json({ message: "Session not found" });
 
-      const adminWalletPromise = AdminWallet.findOne({ _id: "67f7bda255cec58cb4c3fd6b" });
+    // تحقق إن كانت الجلسة مدفوعة مسبقاً
+    if (session.status === "paid") {
+      return res.status(200).json({ success: true, message: "Session already processed" });
+    }
 
-      if (session.type === "SubPackage") {
-        const subPackage = await SubPackage.findOne({ _id: session.typeId }).populate("packageId");
-        if (!subPackage) return res.status(404).json({ message: "SubPackage not found" });
+    const adminWalletPromise = AdminWallet.findOne({ _id: "67f7bda255cec58cb4c3fd6b" });
 
-        const adminWallet = await adminWalletPromise;
+    if (session.type === "SubPackage") {
+      const subPackage = await SubPackage.findOne({ _id: session.typeId }).populate("packageId");
+      if (!subPackage) return res.status(404).json({ message: "SubPackage not found" });
 
-        subPackage.status = "accepted";
-        adminWallet.totalSubscription += subPackage.packageId.price;
-        session.status = "paid";
+      const adminWallet = await adminWalletPromise;
 
-        await Promise.all([
-          subPackage.save(),
-          adminWallet.save(),
-          session.save()
-        ]);
+      subPackage.status = "accepted";
+      adminWallet.totalSubscription += subPackage.packageId.price;
+      session.status = "paid";
 
-        const invoiceNumber = `INV-${Date.now()}`;
-        const invoice = await Invoice.create({
+      await Promise.all([
+        subPackage.save(),
+        adminWallet.save(),
+        session.save()
+      ]);
+
+      // تحقق من وجود الفاتورة مسبقاً
+      const existingInvoice = await Invoice.findOne({ subPackageId: subPackage._id });
+      if (!existingInvoice) {
+        const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const invoice = new Invoice({
           type: "Subscription",
           invoiceNumber,
-          user:subPackage.company,
+          user: subPackage.company,
           subPackageId: subPackage._id
         });
-
-        const newNotification =await Notification.create({ type:"Subscriptions", receiverId:subPackage.company.id, message:"The package was successfully subscribed" });
-
-      } else if (session.type === "PFinancial") {
-        const pFinancial = await PFinancial.findOne({ _id: session.typeId });
-        if (!pFinancial) return res.status(404).json({ message: "Project Finances not found" });
-
-        const [adminWallet, freelancerWallet, companyWallet] = await Promise.all([
-          adminWalletPromise,
-          FreelancerWallet.findOne({ freelancerId: pFinancial.freelancerId }),
-          CompanyWallet.findOne({ companyId: pFinancial.company.id })
-        ]);
-
-        if (!freelancerWallet || !companyWallet) {
-          return res.status(404).json({ message: "Freelancer or Company Wallet not found" });
-        }
-
-        pFinancial.paymentStatus = "paid";
-        adminWallet.totalPendingMoney += pFinancial.budget;
-
-        companyWallet.pendingBalance += pFinancial.budget;
-        companyWallet.totalBalance = companyWallet.pendingBalance + companyWallet.previousBalance;
-
-        freelancerWallet.pendingBalance += pFinancial.budget;
-
-        session.status = "paid";
-
-        await Promise.all([
-          pFinancial.save(),
-          companyWallet.save(),
-          freelancerWallet.save(),
-          adminWallet.save(),
-          session.save()
-        ]);
-
-        const invoiceNumber = `INV-${Date.now()}`;
-        const invoice = await Invoice.create({
-          type: "Pay Project",
-          invoiceNumber,
-          user:pFinancial.company,
-          pFinancialId: pFinancial._id
-        });
-        const newNotification = await Notification.create({ type:"Project", receiverId:pFinancial.company.id, message:"Congratulations, the project has been successfully paid" });
+        await invoice.save();
       }
 
-      return res.status(200).json({ success: true, message: "Payment confirmed, data updated, and invoice created." });
+      // تحقق من وجود التنبيه مسبقاً
+      const existingNotification = await Notification.findOne({
+        type: "Subscriptions",
+        receiverId: subPackage.company.id,
+        message: "The package was successfully subscribed"
+      });
+      if (!existingNotification) {
+        const newNotification = new Notification({
+          type: "Subscriptions",
+          receiverId: subPackage.company.id,
+          message: "The package was successfully subscribed"
+        });
+        await newNotification.save();
+      }
 
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+    } else if (session.type === "PFinancial") {
+      const pFinancial = await PFinancial.findOne({ _id: session.typeId });
+      if (!pFinancial) return res.status(404).json({ message: "Project Finances not found" });
+
+      const [adminWallet, freelancerWallet, companyWallet] = await Promise.all([
+        adminWalletPromise,
+        FreelancerWallet.findOne({ freelancerId: pFinancial.freelancerId }),
+        CompanyWallet.findOne({ companyId: pFinancial.company.id })
+      ]);
+
+      if (!freelancerWallet || !companyWallet) {
+        return res.status(404).json({ message: "Freelancer or Company Wallet not found" });
+      }
+
+      pFinancial.paymentStatus = "paid";
+      adminWallet.totalPendingMoney += pFinancial.budget;
+
+      companyWallet.pendingBalance += pFinancial.budget;
+      companyWallet.totalBalance = companyWallet.pendingBalance + companyWallet.previousBalance;
+
+      freelancerWallet.pendingBalance += pFinancial.budget;
+
+      session.status = "paid";
+
+      await Promise.all([
+        pFinancial.save(),
+        companyWallet.save(),
+        freelancerWallet.save(),
+        adminWallet.save(),
+        session.save()
+      ]);
+
+      // تحقق من وجود الفاتورة مسبقاً
+      const existingInvoice = await Invoice.findOne({ pFinancialId: pFinancial._id });
+      if (!existingInvoice) {
+        const invoiceNumber = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const invoice = new Invoice({
+          type: "Pay Project",
+          invoiceNumber,
+          user: pFinancial.company,
+          pFinancialId: pFinancial._id
+        });
+        await invoice.save();
+      }
+
+      // تحقق من وجود التنبيه مسبقاً
+      const existingNotification = await Notification.findOne({
+        type: "Project",
+        receiverId: pFinancial.company.id,
+        message: "Congratulations, the project has been successfully paid"
+      });
+      if (!existingNotification) {
+        const newNotification = new Notification({
+          type: "Project",
+          receiverId: pFinancial.company.id,
+          message: "Congratulations, the project has been successfully paid"
+        });
+        await newNotification.save();
+      }
     }
-  },
+
+    return res.status(200).json({ success: true, message: "Payment confirmed, data updated, and invoice created." });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+},
   finishProject: async (req, res) => {
     try {
       const { projectId } = req.params;

@@ -30,12 +30,13 @@ const notifyExpiringPackages = async () => {
         });
 
         if (!existingNotification) {
-          await Notification.create({
+          const newNotification=new Notification({
             type: 'Subscriptions',
             receiverId: companyId.toString(),
             message: 'Your subscription will expire in 24 hours',
             description: `Your current subscription will expire on ${endDate.toLocaleDateString()}`,
           });
+          await newNotification.save();
 
           console.log(`Notification sent to company ${companyId}`);
         }

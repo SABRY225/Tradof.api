@@ -14,12 +14,13 @@ const notificationService = {
         });
       }
 
-      const newNotification = await Notification.create({
+      const newNotification = new Notification({
         type,
         receiverId,
         message,
         description,
       });
+      await newNotification.save();
 
       res.status(201).json({
         success: true,

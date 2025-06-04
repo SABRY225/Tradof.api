@@ -44,8 +44,10 @@ const technicalSupportService = {
     
             chat.messages.push({ senderId, message, file: fileUrl });
             await chat.save();
-            const newNotification = await Notification.create({ type:"Technical Support", receiverId:"admin", message:"Message from technical support" });
-            res.status(201).json({ success: true, message: "Message sent successfully" });
+            const newNotification = new Notification({ type:"Technical Support", receiverId:"admin", message:"Message from technical support" });
+            await newNotification.save();
+            res.status(201).json({ success: true, message: "Message sent successfully" });                
+
     
         } catch (error) {
             res.status(500).json({ success: false, message: error.message });
@@ -90,7 +92,9 @@ const technicalSupportService = {
   
           chat.messages.push({ senderId:"admin", message, file: fileUrl });
           await chat.save();
-          const newNotification = await Notification.create({ type:"Technical Support",receiverId:"admin", message:`Message from the user ${user.firstName+" "+user.lastName}` });
+          const newNotification = new Notification({ type:"Technical Support",receiverId:"admin", message:`Message from the user ${user.firstName+" "+user.lastName}` });
+          await newNotification.save();
+
           res.status(201).json({ success: true, message: "Message sent successfully" });
   
       } catch (error) {
