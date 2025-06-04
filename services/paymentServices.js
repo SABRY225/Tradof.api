@@ -185,6 +185,7 @@ const paymentService = {
         const invoice = await Invoice.create({
           type: "Subscription",
           invoiceNumber,
+          user:subPackage.company,
           subPackageId: subPackage._id
         });
 
@@ -226,6 +227,7 @@ const paymentService = {
         const invoice = await Invoice.create({
           type: "Pay Project",
           invoiceNumber,
+          user:pFinancial.company,
           pFinancialId: pFinancial._id
         });
         const newNotification = await Notification.create({ type:"Project", receiverId:pFinancial.company.id, message:"Congratulations, the project has been successfully paid" });

@@ -6,6 +6,10 @@ const InvoiceSchema = new mongoose.Schema({
         required: true,
         enum: ["Subscription", "Withdraw Profits","Pay Project"],
     },
+    user: {
+        type: Object,
+        required: true
+    },
     invoiceNumber: {
         type: String,
         required: true

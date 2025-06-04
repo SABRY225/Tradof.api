@@ -15,7 +15,7 @@ const FinancialHistoryFreelancer = require("../models/financialHistoryFreelancer
 const Invoice = require("../models/InvoiceModel");
 const Notification = require("../models/notificationModel");
 
-const paymentService = {
+const financialService = {
     getStatusProject: async (req, res) => {
         try {
             const { projectId } = req.params;
@@ -312,80 +312,81 @@ const paymentService = {
             res.status(500).json({ success: false, message: 'Server error: ' + error.message });
         }
     },
-requestWithdrawProfits: async (req, res) => {
-    try {
-        const token = req.headers['authorization'];
+    requestWithdrawProfits: async (req, res) => {
+        try {
+            const token = req.headers['authorization'];
 
-        // Validate Token
-        if (!token) {
-            return res.status(400).json({ success: false, message: 'Token is missing!' });
+            // Validate Token
+            if (!token) {
+                return res.status(400).json({ success: false, message: 'Token is missing!' });
+            }
+
+            const user = await getTokenFromDotNet(token);
+            if (!user.role || user.role !== "Freelancer") {
+                return res.status(401).json({ success: false, message: 'Invalid token or user not authorized!' });
+            }
+
+            const { amount, paymentDetails } = req.body;
+
+            // Validation
+            if (!amount || !paymentDetails) {
+                return res.status(400).json({ success: false, message: 'Amount and payment details are required!' });
+            }
+
+            // Check if user already has a pending or processing withdraw request
+            const existingRequest = await WithdrawProfit.findOne({
+                'freelancer.id': user.id,
+                paymentStatus: 'pending'
+            });
+
+            if (existingRequest) {
+                return res.status(400).json({ success: false, message: 'You already have a pending withdraw request. Please wait until it is processed.' });
+            }
+
+            const freelancerWallet = await FreelancerWallet.findOne({ freelancerId: user.id });
+            if (!freelancerWallet) {
+                return res.status(400).json({ success: false, message: 'The freelancer has no wallet.' });
+            }
+
+            if (freelancerWallet.availableBalance < amount) {
+                return res.status(400).json({ success: false, message: 'The amount is greater than the available balance.' });
+            }
+
+            const newRequest = new WithdrawProfit({
+                freelancer: user,
+                amount,
+                paymentDetails,
+                paymentStatus: 'pending'
+            });
+
+            await newRequest.save();
+
+            const invoiceNumber = `INV-${Date.now()}`;
+            const invoice = await Invoice.create({
+                type: "Withdraw Profits",
+                invoiceNumber,
+                user,
+                withdrawProfitId: newRequest._id
+            });
+
+            const newNotification = await Notification.create({
+                type: "Withdraw Profit",
+                receiverId: "admin",
+                message: "There is a request to withdraw new profits"
+            });
+
+
+            res.status(201).json({
+                success: true,
+                message: 'Withdraw request submitted and invoice created successfully!',
+                withdrawId: newRequest._id,
+                invoiceId: invoice._id
+            });
+
+        } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
         }
-
-        const user = await getTokenFromDotNet(token);
-        if (!user.role || user.role !== "Freelancer") {
-            return res.status(401).json({ success: false, message: 'Invalid token or user not authorized!' });
-        }
-
-        const { amount, paymentDetails } = req.body;
-
-        // Validation
-        if (!amount || !paymentDetails) {
-            return res.status(400).json({ success: false, message: 'Amount and payment details are required!' });
-        }
-
-        // Check if user already has a pending or processing withdraw request
-        const existingRequest = await WithdrawProfit.findOne({
-            'freelancer.id': user.id,
-            paymentStatus: 'pending'
-        });
-
-        if (existingRequest) {
-            return res.status(400).json({ success: false, message: 'You already have a pending withdraw request. Please wait until it is processed.' });
-        }
-
-        const freelancerWallet = await FreelancerWallet.findOne({ freelancerId: user.id });
-        if (!freelancerWallet) {
-            return res.status(400).json({ success: false, message: 'The freelancer has no wallet.' });
-        }
-
-        if (freelancerWallet.availableBalance < amount) {
-            return res.status(400).json({ success: false, message: 'The amount is greater than the available balance.' });
-        }
-
-        const newRequest = new WithdrawProfit({
-            freelancer: user,
-            amount,
-            paymentDetails,
-            paymentStatus: 'pending'
-        });
-
-        await newRequest.save();
-
-        const invoiceNumber = `INV-${Date.now()}`;
-        const invoice = await Invoice.create({
-            type: "Withdraw Profits",
-            invoiceNumber,
-            withdrawProfitId: newRequest._id
-        });
-
-        const newNotification = await Notification.create({
-            type: "Withdraw Profit",
-            receiverId: "admin",
-            message: "There is a request to withdraw new profits"
-        });
-
-
-        res.status(201).json({
-            success: true,
-            message: 'Withdraw request submitted and invoice created successfully!',
-            withdrawId: newRequest._id,
-            invoiceId: invoice._id
-        });
-
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-},
+    },
     editStatusRequest: async (req, res) => {
         try {
             const token = req.headers['authorization'];
@@ -430,12 +431,12 @@ requestWithdrawProfits: async (req, res) => {
                 adminWallet.totalMoneyByFreelancersReceive -= withdrawRequest.amount;
                 await adminWallet.save();
                 await freelancerWallet.save();
-                const newNotification = await Notification.create({ type:"Withdraw Profit", receiverId:withdrawRequest.freelancer.id, message:"The money was successfully sent, please review your bank and also bills" });
+                const newNotification = await Notification.create({ type: "Withdraw Profit", receiverId: withdrawRequest.freelancer.id, message: "The money was successfully sent, please review your bank and also bills" });
             }
 
             withdrawRequest.paymentStatus = paymentStatus;
             await withdrawRequest.save();
-            const newNotification = await Notification.create({ type:"Withdraw Profit", receiverId:withdrawRequest.freelancer.id, message:"Your request has been rejected for the process of withdrawing profits, please verify the bank account data" });
+            const newNotification = await Notification.create({ type: "Withdraw Profit", receiverId: withdrawRequest.freelancer.id, message: "Your request has been rejected for the process of withdrawing profits, please verify the bank account data" });
             res.status(200).json({ success: true, message: 'Withdraw request updated and wallet adjusted successfully.' });
 
         } catch (error) {
@@ -519,7 +520,6 @@ requestWithdrawProfits: async (req, res) => {
         // 2. الشهر الحالي
         months.push(currentMonth);
 
-        // 3. لو لسه أقل من 6 شهور، كمل من الشهور التالية
         let nextMonth = currentMonth + 1;
         while (months.length < monthsToShow && nextMonth <= 12) {
             months.push(nextMonth);
@@ -558,8 +558,33 @@ requestWithdrawProfits: async (req, res) => {
             data: result,
             maxValue: maxValue
         });
-    }
+    },
+    getUserInvoices: async (req, res) => {
+        try {
+            const token = req.headers['authorization'];
 
+            if (!token) {
+                return res.status(400).json({ success: false, message: 'Token is missing!' });
+            }
+
+            const user = await getTokenFromDotNet(token);
+            if (!user) {
+                return res.status(401).json({ success: false, message: 'Invalid token or user not found!' });
+            }
+
+            const invoices = await Invoice.find({ "user.id": user.id })
+                .populate("pFinancialId")
+                .populate("subPackageId")
+                .populate("withdrawProfitId");
+            if(!invoices){
+              return res.status(200).json({data:[]});
+            }
+            return res.status(200).json({data:invoices});
+        } catch (error) {
+            console.error("Error fetching user invoices:", error);
+            res.status(500).json({ message: "Something went wrong" });
+        }
+    }
 }
 
-module.exports = { paymentService };
+module.exports = { financialService };
