@@ -81,7 +81,13 @@ const paymentService = {
       }
 
       const { projectId, freelancerId, budget, deliveryTime } = req.body;
-
+      console.log(req.body);
+      
+       console.log("token :",token);
+    console.log("projectId :",projectId);
+    console.log("freelancerId :",freelancerId);
+    console.log("budget :",budget);
+    console.log("deliveryTime :",deliveryTime);
       if (!projectId || !freelancerId || !budget || !deliveryTime) {
         return res.status(400).json({
           success: false,
@@ -141,7 +147,7 @@ const paymentService = {
 
       return res.status(201).json({
         success: true,
-        message: "Please pay for the package.",
+        message: "Please pay for the Project.",
         type: "paid",
         iframURL: data.iframURL
       });

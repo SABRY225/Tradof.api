@@ -575,18 +575,18 @@ const financialService = {
             }
 
             const invoices = await Invoice.find({ "user.id": user.id })
-    .populate("pFinancialId")
-    .populate({
-        path: "subPackageId",
-        populate: {
-            path: "packageId"  
-        }
-    })
-    .populate("withdrawProfitId");
-            if(!invoices){
-              return res.status(200).json({data:[]});
+                .populate("pFinancialId")
+                .populate({
+                    path: "subPackageId",
+                    populate: {
+                        path: "packageId"
+                    }
+                })
+                .populate("withdrawProfitId");
+            if (!invoices) {
+                return res.status(200).json({ data: [] });
             }
-            return res.status(200).json({data:invoices});
+            return res.status(200).json({ data: invoices });
         } catch (error) {
             console.error("Error fetching user invoices:", error);
             res.status(500).json({ message: "Something went wrong" });
