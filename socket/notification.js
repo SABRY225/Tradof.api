@@ -8,7 +8,7 @@ async function handleSeenNotification(socket, notificationId) {
     socket.emit("notificationSeen", { notificationId, seen: true });
   } catch (error) {
     console.error("Error updating notification:", error);
-    socket.emit("error", { message: "Error updating notification" });
+    socket.emit("error", { message: error.message });
   }
 }
 
