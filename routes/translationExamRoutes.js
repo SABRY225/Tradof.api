@@ -140,6 +140,7 @@ router.post("/generate/:email", async (req, res) => {
     console.error("Error generating translation exam:", error);
     return res.status(500).json({
       success: false,
+      error:error.message,
       message: "Internal server error while generating translation exam",
     });
   }
