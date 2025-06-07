@@ -6,11 +6,19 @@ const examSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
+  initial_language: {
+    type: Object,
+    required: true,
+  },
+  target_language: {
+    type: Object,
+    required: true,
+  },
   examData: {
     type: Object,
     required: true,
   },
-  answers: {
+  userAnswers: {
     type: Object,
     default: {},
   },
@@ -28,6 +36,18 @@ const examSchema = new mongoose.Schema({
   },
   completedAt: {
     type: Date,
+  },
+  examDate: {
+    type: Date,
+    required: true,
+  },
+  validUntil: {
+    type: Date,
+    required: true,
+  },
+  isExpired: {
+    type: Boolean,
+    default: false,
   },
 });
 

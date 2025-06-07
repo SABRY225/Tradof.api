@@ -376,8 +376,59 @@ const sendMeetingResponseNotification = async ({
   }
 };
 
+/**
+ * Send an exam notification email
+ * @param {Object} options - Email options
+ * @param {string} options.to - Recipient email address
+ * @param {string} options.examId - Exam ID
+ * @param {string} options.initial_language - Initial language
+ * @param {string} options.target_language - Target language
+ * @returns {Promise} - Promise resolving to email sending result
+ */
+const sendExamNotification = async ({
+  to,
+  examId,
+  initial_language,
+  target_language,
+}) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to,
+      subject: `New Translation Exam Available`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">New Translation Exam</h2>
+          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 5px;">
+            <p><strong>Language Pair:</strong> ${initial_language} → ${target_language}</p>
+            <p><strong>Exam ID:</strong> ${examId}</p>
+          </div>
+          <p style="margin-top: 20px;">A new translation exam has been generated for you. Click the button below to start the exam.</p>
+          <div style="margin-top: 20px; text-align: center;">
+            <a href="${process.env.CLIENT_URL}/exam/${examId}" 
+               style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Start Exam
+            </a>
+          </div>
+          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+            <p>This is an automated message, please do not reply to this email.</p>
+          </div>
+        </div>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Exam notification email sent successfully:", info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error("Error sending exam notification:", error);
+    throw new Error("Failed to send exam notification: " + error.message);
+  }
+};
+
 module.exports = {
   sendMeetingInvitation,
   sendMeetingReminder,
   sendMeetingResponseNotification,
+  sendExamNotification,
 };
