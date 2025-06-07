@@ -94,10 +94,9 @@ const financialService = {
                     prjectData: {
                         id: project.id,
                         name: project.name,
-                        depoistPrice: project.paymentPrice,
+                        depoistPrice: project.price,
                         deliveryTime: project.days,
-                        posted: project.startDate,
-                        depoistDate: project.price
+                        posted: project.startDate
                     },
                     paymentStatus: project.paymentStatus
                 }))
@@ -163,10 +162,9 @@ const financialService = {
                     prjectData: {
                         id: project.id,
                         name: project.name,
-                        depoistPrice: project.paymentPrice,
+                        depoistPrice: project.price,
                         deliveryTime: project.days,
                         posted: project.startDate,
-                        depoistDate: project.price
                     },
                     paymentStatus: project.paymentStatus
                 }))
