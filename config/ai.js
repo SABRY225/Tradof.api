@@ -1,5 +1,5 @@
 const { mediumExam, cleanJsonResponse } = require("../helpers/examHelpers");
-
+require('dotenv').config();
 const model_name = "gemini-2.0-flash";
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY = 1000; // 1 second
