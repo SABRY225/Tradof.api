@@ -109,7 +109,7 @@ const subscriptionService = {
 
             const now = new Date();
             if (now > end) {
-                return res.json({ expired: true, remaining: { days: 0, months: 0, years: 0 } });
+                return res.json({sub, expired: true, remaining: { days: 0, months: 0, years: 0 } });
             }
 
             const diffTime = Math.abs(end - now);
