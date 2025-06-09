@@ -4,8 +4,8 @@ const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
+    user: "tradofhelp@gmail.com",
+    pass: "xdkafydshnotpolx",
   },
 });
 
@@ -30,7 +30,7 @@ const sendMeetingInvitation = async ({
 }) => {
   try {
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from:"tradofhelp@gmail.com",
       to,
       subject: `Meeting Invitation: ${title}`,
       html: `
@@ -300,7 +300,7 @@ const sendMeetingInvitation = async ({
 const sendMeetingReminder = async ({ to, title, startDate, meetingId }) => {
   try {
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: "tradofhelp@gmail.com",
       to,
       subject: `Reminder: ${title}`,
       html: `
@@ -347,7 +347,7 @@ const sendMeetingResponseNotification = async ({
 }) => {
   try {
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: "tradofhelp@gmail.com",
       to,
       subject: `Meeting Response: ${title}`,
       html: `
@@ -393,7 +393,7 @@ const sendExamNotification = async ({
 }) => {
   try {
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: "tradofhelp@gmail.com",
       to,
       subject: `New Translation Exam Available`,
       html: `
