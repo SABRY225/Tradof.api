@@ -58,7 +58,7 @@ async function PaymentProcess(dataPay) {
                 "billing_data": billingData,
                 "currency": "EGP",
                 "integration_id": 4907669,
-                "redirection_url": "http://localhost:5173/success-payment"
+                "redirection_url": "https://tradof.netlify.app/success-payment"
             })
         });
 
