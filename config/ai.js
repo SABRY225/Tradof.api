@@ -14,7 +14,7 @@ async function main({ initial_language, target_language }) {
   while (retries < MAX_RETRIES) {
     try {
       const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API });
+      const ai = new GoogleGenAI({ apiKey: "AIzaSyBJoGLpZBdf5eGr3_kLOilTWPLcaQaFaY4" });
 
       const response = await ai.models.generateContent({
         model: model_name,
