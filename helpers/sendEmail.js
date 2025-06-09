@@ -137,9 +137,7 @@ const sendMeetingInvitation = async ({
                                                     </div>
                                                 </td>
                                                 <td style="vertical-align: top;">
-                                                    <a href="${
-                                                      process.env.CLIENT_URL
-                                                    }/meeting/waiting/${meetingId}" 
+                                                    <a href="https://tradof.netlify.app/meeting/waiting/${meetingId}" 
                                                        style="background-color: #0891b2; color: white; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
                                                         🚀 Join Meeting Room
                                                     </a>
@@ -159,9 +157,7 @@ const sendMeetingInvitation = async ({
                                             <tr>
                                                 <!-- Accept Button -->
                                                 <td style="padding-right: 15px;">
-                                                    <a href="${
-                                                      process.env.API_URL
-                                                    }/api/meeting/accept/${meetingId}?email=${encodeURIComponent(
+                                                    <a href="https://tradofapi-production.up.railway.app/api/meeting/accept/${meetingId}?email=${encodeURIComponent(
         to
       )}" 
                                                        onclick="handleResponse('accept', this.href); return false;"
