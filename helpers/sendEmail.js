@@ -405,7 +405,7 @@ const sendExamNotification = async ({
           </div>
           <p style="margin-top: 20px;">A new translation exam has been generated for you. Click the button below to start the exam.</p>
           <div style="margin-top: 20px; text-align: center;">
-            <a href="${process.env.CLIENT_URL}/exam/${examId}" 
+            <a href="https://tradof.netlify.app/exam/${examId}" 
                style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
               Start Exam
             </a>
