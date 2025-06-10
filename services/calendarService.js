@@ -4,7 +4,7 @@ const { default: mongoose } = require("mongoose");
 const { getTokenFromDotNet } = require("../helpers/getToken");
 const { getUserCalendarId } = require("../helpers/getCalenderId");
 const { log } = require("@grpc/grpc-js/build/src/logging");
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 const meetingService = require("../services/meetingService");
 const { sendMeetingInvitation } = require("../helpers/sendEmail");
 
@@ -285,11 +285,16 @@ const calenderService = {
 
       const createdEvent = await Event.create(event);
 
+      // Populate the meeting data
+      const populatedEvent = await Event.findById(createdEvent._id).populate(
+        "meeting"
+      );
+
       res.status(201).json({
         success: true,
         message: "Event created successfully",
         event: {
-          ...createdEvent.toObject(),
+          ...populatedEvent.toObject(),
           participation: await meetingService.getMeetingParticipants(meetingId),
           meetingId,
         },
