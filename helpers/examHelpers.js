@@ -1,6 +1,6 @@
 const mediumExam = ({ initial_language, target_language }) => {
   return `
-  You are an AI language expert. Your task is to generate a professional translation exam in structured JSON format only.
+    You are an AI language expert. Your task is to generate a professional translation exam in structured JSON format only.
 
 🎯 Exam Type: Translation Proficiency Exam  
 🧠 Difficulty: Medium  
@@ -35,7 +35,7 @@ D = Irrelevant or wrong
     "listening_comprehension": [
       {
         "audio_title": "Doctor Consultation",
-        "transcript": "Doctor: Have you experienced chest pain recently? Patient: Only when I climb stairs...",
+        "transcript": "Doctor: Have you experienced chest pain recently? Patient: Only when I climb stairs.",
         "audio_lang":"language that transcript will read be it",
         "questions": [
           {
@@ -55,7 +55,7 @@ D = Irrelevant or wrong
     ],
     "reading_translation": [
       {
-        "source_text": "This contract is subject to termination under clause 4.2...",
+        "source_text": "This contract is subject to termination under clause 4.2.",
         "questions": [...]
       }
     ],
@@ -91,7 +91,7 @@ D = Irrelevant or wrong
       }
     ]
   }
-}
+} 
 `;
 };
 
